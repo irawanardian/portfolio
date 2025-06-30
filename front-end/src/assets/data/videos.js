@@ -1,4 +1,4 @@
-const thumbnails = import.meta.glob("/src/assets/thumbnail*/**/*.png", {
+const thumbnails = import.meta.glob("/src/assets/thumbnail*/**/*.{png,jpg}", {
   eager: true,
 });
 
@@ -102,5 +102,41 @@ export const videos = [
       thumbnails["/src/assets/thumbnailPrewedding/2.liaHilman.png"].default,
     category: "Prewedding",
     videoUrl: "https://youtube.com/embed/3112_LWFt3U?si=1pgpoefvY776ODMB",
+  },
+  //   Product Adversting
+  {
+    title: "Iklan Penjualan Rumah | 1",
+    thumbnail:
+      thumbnails["/src/assets/thumbnailProductAdvertisement/1.png"].default,
+    category: "Product Advertisement",
+    videoUrl: "https://youtu.com/embed/EyfJXzMpeeE?si=QhLxXrhtfEfEPzuI",
+  },
+  {
+    title: "Iklan Penjualan Rumah | 2",
+    thumbnail:
+      thumbnails["/src/assets/thumbnailProductAdvertisement/2.png"].default,
+    category: "Product Advertisement",
+    videoUrl: "https://youtube.com/embed/2glEiz8H9lk?si=WsEcn3pPbfL-sghC",
+  },
+  {
+    title: "Iklan Penjualan Rumah | 3",
+    thumbnail:
+      thumbnails["/src/assets/thumbnailProductAdvertisement/3.png"].default,
+    category: "Product Advertisement",
+    videoUrl: "https://youtube.com/embed/UdyBbU43tpo?si=4SkUbr_r6-Z0qQ83",
+  },
+  {
+    title: "Iklan Penjualan Kopi | 1",
+    thumbnail:
+      thumbnails["/src/assets/thumbnailProductAdvertisement/4.jpg"].default,
+    category: "Product Advertisement",
+    videoUrl: "https://youtube.com/embed/5mswaGgylak",
+  },
+  {
+    title: "Iklan Penjualan Kopi | 2",
+    thumbnail:
+      thumbnails["/src/assets/thumbnailProductAdvertisement/5.jpg"].default,
+    category: "Product Advertisement",
+    videoUrl: "https://youtube.com/embed/RlIGZMERe8g",
   },
 ];
