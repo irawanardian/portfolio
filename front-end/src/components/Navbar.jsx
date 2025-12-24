@@ -1,245 +1,191 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, ChevronDown } from "lucide-react";
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false); // State baru untuk mendeteksi scroll
-  const lastScrollY = useRef(0);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobilePortfolioOpen, setMobilePortfolioOpen] = useState(false); // Khusus accordion mobile
+
   const location = useLocation();
 
+  // --- Logic Scroll & Hide/Show ---
   useEffect(() => {
     const handleScroll = () => {
-      // Logic untuk menyembunyikan/menampilkan navbar saat scroll
-      if (window.scrollY > lastScrollY.current) {
-        setIsVisible(false); // Sembunyikan jika scroll ke bawah
-      } else {
-        setIsVisible(true); // Tampilkan jika scroll ke atas
-      }
-      lastScrollY.current = window.scrollY;
+      const currentScrollY = window.scrollY;
 
-      // Logic untuk mengubah background navbar saat scroll
-      if (window.scrollY > 50) {
-        // Angka 50 bisa disesuaikan
+      // Logic Hide/Show Navbar
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false); // Scroll ke bawah -> Hide
+      } else {
+        setIsVisible(true); // Scroll ke atas -> Show
+      }
+
+      // Logic Background Hitam/Transparan
+      if (currentScrollY > 50) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener("scroll", handleScroll);
-    // Jalankan sekali saat komponen dimuat untuk mengecek posisi scroll awal
-    handleScroll();
-
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
+  // --- Logic Disable Body Scroll saat Menu Buka ---
   useEffect(() => {
-    if (menuOpen) {
-      document.body.classList.add("overflow-hidden");
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.classList.remove("overflow-hidden");
+      document.body.style.overflow = "auto";
     }
-  }, [menuOpen]);
+  }, [mobileMenuOpen]);
 
-  // Tentukan background navbar berdasarkan lokasi dan status scroll
-  const getNavbarBackgroundClass = () => {
-    if (location.pathname === "/") {
-      // Di halaman Home
-      return isScrolled ? "bg-black backdrop-blur-md" : "bg-transparent";
-    } else {
-      // Di halaman lain
-      return "bg-black backdrop-blur-md";
-    }
-  };
+  // --- Close menu saat pindah halaman ---
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location]);
 
   return (
-    <nav
-      className={`fixed top-0 left-0 w-full p-5 text-white transition-all duration-300 ${
-        // Ubah duration-300 agar background juga transisi
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      } ${getNavbarBackgroundClass()} z-50`}
-    >
-      <div className="max-w-6xl mx-auto flex items-center relative">
-        <Link
-          to="/"
-          onClick={() => {
-            setDropdownOpen(false);
-            setMenuOpen(false);
-          }}
-        >
-          <img
-            src="/logo-ia.png" // Pastikan path logo benar
-            alt="logo"
-            className="w-[40px] h-[40px] cursor-pointer"
-          />
-        </Link>
+    <>
+      <motion.nav
+        initial={{ y: 0 }}
+        animate={{ 
+          y: isVisible ? 0 : -100,
+          backgroundColor: isScrolled || mobileMenuOpen ? "rgba(10, 10, 10, 0.8)" : "transparent",
+          backdropFilter: isScrolled || mobileMenuOpen ? "blur(12px)" : "blur(0px)"
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="fixed top-0 left-0 w-full z-50 border-b border-white/5"
+      >
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          
+          {/* 1. LOGO */}
+          <Link to="/" className="text-2xl font-bold tracking-tighter text-white z-50">
+             {/* Ganti dengan <img src...> jika ada logo image */}
+             VISUALS<span className="text-gray-500">.</span>
+          </Link>
 
-        {location.pathname !== "/portfolio" && ( // Ini mungkin perlu disesuaikan jika ingin menu selalu terlihat
-          <>
-            <ul className="hidden md:flex absolute left-1/2 -translate-x-1/2 space-x-6 font-roboto text-base">
-              <li>
-                <Link
-                  to="/"
-                  className="hover:text-gray-300"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setMenuOpen(false);
-                  }}
-                >
-                  Home
+          {/* 2. DESKTOP MENU (Hidden on Mobile) */}
+          <div className="hidden md:flex items-center gap-8">
+            <NavLink to="/">Home</NavLink>
+            
+            {/* Dropdown Desktop */}
+            <div className="relative group h-full flex items-center">
+              <button className="flex items-center gap-1 text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                Portfolio <ChevronDown className="w-4 h-4" />
+              </button>
+              
+              {/* Dropdown Content */}
+              <div className="absolute top-10 left-1/2 -translate-x-1/2 w-48 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 overflow-hidden">
+                <Link to="/portfolio/foto" className="block px-6 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  Photography
                 </Link>
-              </li>
-              <li className="relative group">
-                <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="hover:text-gray-300"
-                >
-                  Portfolio
-                </button>
-                {dropdownOpen && (
-                  <ul className="absolute top-full left-0 bg-black text-white shadow-lg mt-2 w-32 p-2 space-y-2 rounded-md">
-                    {" "}
-                    {/* Tambah rounded-md */}
-                    <li>
-                      <Link
-                        to="/portfolio/foto"
-                        className="block px-4 py-2 hover:bg-gray-700 rounded-sm" // Tambah rounded-sm
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        Foto
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/portfolio/video"
-                        className="block px-4 py-2 hover:bg-gray-700 rounded-sm"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        Video
-                      </Link>
-                    </li>
-                  </ul>
+                <Link to="/portfolio/video" className="block px-6 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  Videography
+                </Link>
+              </div>
+            </div>
+
+            <NavLink to="/about">About</NavLink>
+            <Link 
+              to="/contact" 
+              className="px-6 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-gray-200 transition-transform hover:scale-105"
+            >
+              Let's Talk
+            </Link>
+          </div>
+
+          {/* 3. MOBILE HAMBURGER BUTTON */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            className="md:hidden text-white z-50 p-2"
+          >
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
+      </motion.nav>
+
+      {/* 4. MOBILE FULL SCREEN MENU OVERLAY */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: "-100%" }} // Masuk dari atas
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }} // Keluar ke atas
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} // Bezier curve smooth
+            className="fixed inset-0 z-40 bg-neutral-950 flex flex-col items-center justify-center space-y-8 md:hidden"
+          >
+            <MobileLink to="/" onClick={() => setMobileMenuOpen(false)}>Home</MobileLink>
+            
+            {/* Mobile Portfolio Accordion */}
+            <div className="flex flex-col items-center">
+              <button 
+                onClick={() => setMobilePortfolioOpen(!mobilePortfolioOpen)}
+                className="text-3xl font-bold text-white/80 flex items-center gap-2 mb-4"
+              >
+                Portfolio 
+                <motion.div animate={{ rotate: mobilePortfolioOpen ? 180 : 0 }}>
+                  <ChevronDown className="w-6 h-6" />
+                </motion.div>
+              </button>
+              
+              <AnimatePresence>
+                {mobilePortfolioOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden flex flex-col items-center gap-4 text-xl text-gray-500"
+                  >
+                    <Link to="/portfolio/foto" onClick={() => setMobileMenuOpen(false)} className="hover:text-white">Photography</Link>
+                    <Link to="/portfolio/video" onClick={() => setMobileMenuOpen(false)} className="hover:text-white">Videography</Link>
+                  </motion.div>
                 )}
-              </li>
-              <li>
-                <Link
-                  to="/about"
-                  className="hover:text-gray-300"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setMenuOpen(false);
-                  }}
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="hover:text-gray-300"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setMenuOpen(false);
-                  }}
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
+              </AnimatePresence>
+            </div>
 
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden text-white text-2xl ml-auto focus:outline-none" // Tambah focus:outline-none
-            >
-              &#9776; {/* Ikon hamburger */}
-            </button>
-          </>
+            <MobileLink to="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileLink>
+            <MobileLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</MobileLink>
+            
+            <div className="absolute bottom-10 text-gray-600 text-xs tracking-widest uppercase">
+              &copy; 2024 Your Visuals
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
+    </>
+  );
+}
 
-      {/* Mobile Menu */}
-      {menuOpen && location.pathname !== "/portfolio" && (
-        <ul className="md:hidden bg-black/90 text-white space-y-4 p-6 absolute w-full left-0 top-16 shadow-lg z-40 animate-fade-in-down">
-          {" "}
-          {/* Tambah animasi */}
-          <li>
-            <Link
-              to="/"
-              className="block hover:bg-gray-700 px-4 py-2 rounded-md" // Tambah styling untuk mobile menu item
-              onClick={() => {
-                setDropdownOpen(false);
-                setMenuOpen(false);
-              }}
-            >
-              Home
-            </Link>
-          </li>
-          <li>
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-full text-left hover:bg-gray-700 px-4 py-2 rounded-md"
-            >
-              Portfolio
-            </button>
-            {dropdownOpen && (
-              <ul className="pl-6 space-y-2 mt-2">
-                {" "}
-                {/* Tambah mt-2 */}
-                <li>
-                  <Link
-                    to="/portfolio/foto"
-                    className="block hover:bg-gray-800 px-4 py-2 rounded-md"
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    Foto
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/portfolio/video"
-                    className="block hover:bg-gray-800 px-4 py-2 rounded-md"
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    Video
-                  </Link>
-                </li>
-              </ul>
-            )}
-          </li>
-          <li>
-            <Link
-              to="/about"
-              className="block hover:bg-gray-700 px-4 py-2 rounded-md"
-              onClick={() => {
-                setDropdownOpen(false);
-                setMenuOpen(false);
-              }}
-            >
-              About
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/contact"
-              className="block hover:bg-gray-700 px-4 py-2 rounded-md"
-              onClick={() => {
-                setDropdownOpen(false);
-                setMenuOpen(false);
-              }}
-            >
-              Contact
-            </Link>
-          </li>
-        </ul>
-      )}
-    </nav>
+// --- Sub-Components untuk kerapihan ---
+
+function NavLink({ to, children }) {
+  return (
+    <Link 
+      to={to} 
+      className="text-sm font-medium text-gray-300 hover:text-white transition-colors relative group"
+    >
+      {children}
+      <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
+    </Link>
+  );
+}
+
+function MobileLink({ to, children, onClick }) {
+  return (
+    <Link 
+      to={to} 
+      onClick={onClick} 
+      className="text-4xl font-bold text-white hover:text-gray-400 transition-colors tracking-tight"
+    >
+      {children}
+    </Link>
   );
 }

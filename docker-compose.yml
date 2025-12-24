@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # Service untuk Frontend
+  client:
+    build: ./front-end        # <--- Menunjuk ke folder frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./front-end:/app             # Sync folder frontend laptop ke container
+      - /app/node_modules           # Biarkan node_modules container aman
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true          # Penting untuk react-scripts agar tidak exit
+    tty: true
+
+  # Nanti kalau backend sudah ada, tinggal tambah di bawah sini:
+  # server:
+  #   build: ./backend
+  #   ports:
+  #     - "5000:5000"
