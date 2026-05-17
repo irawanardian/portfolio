@@ -1,7 +1,9 @@
 export default function Footer() {
   return (
-    <div className="h-[100px] text-center text-white text-m bg-black flex justify-center items-center">
-      Copyright irawanardiantoro 2025
-    </div>
+    <footer className="border-t border-white/10 bg-neutral-950 py-8 text-center">
+      <p className="text-sm text-gray-500">
+        © {new Date().getFullYear()} Irawan Ardiantoro. Digital & Visual Portfolio.
+      </p>
+    </footer>
   );
 }

@@ -7,6 +7,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Footer from "./components/Footer";
 import Foto from "./pages/Foto";
+import DigitalPortfolio from "./pages/DigitalPortfolio";
 
 export default function App() {
   const location = useLocation();
@@ -18,6 +19,7 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/portfolio/digital" element={<DigitalPortfolio />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/portfolio/foto" element={<Foto />} />
         {""}

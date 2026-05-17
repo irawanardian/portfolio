@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ZoomIn } from "lucide-react";
+import { ArrowLeft, X, ZoomIn } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // --- DUMMY DATA FOTO (Ganti nanti dengan data aslimu) ---
 // --- CURATED AESTHETIC PHOTOS ---
@@ -86,23 +87,38 @@ export default function Foto() {
     <div className="bg-neutral-950 min-h-screen text-white pt-24 pb-20 px-4 md:px-8 font-sans">
       
       {/* --- HEADER --- */}
-      <div className="max-w-7xl mx-auto mb-16 text-center">
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-6xl font-bold tracking-tighter mb-4"
-        >
-          Visual <span className="text-gray-500 italic font-serif">Journal.</span>
-        </motion.h1>
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-gray-400 max-w-2xl mx-auto"
-        >
-          Koleksi momen beku yang bercerita tanpa suara.
-        </motion.p>
-      </div>
+      <div className="max-w-7xl mx-auto mb-16">
+  <Link
+    to="/portfolio"
+    className="mb-10 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
+  >
+    <ArrowLeft className="w-4 h-4" />
+    Back to Portfolio
+  </Link>
+
+  <motion.div
+    initial={{ opacity: 0, y: 35 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.8 }}
+    className="max-w-3xl"
+  >
+    <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
+      Photo Stories
+    </p>
+
+    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight mb-6">
+      VISUAL <br />
+      <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-500">
+        JOURNAL.
+      </span>
+    </h1>
+
+    <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
+      A collection of still moments, visual details, and stories captured
+      through light, composition, and real experience from the field.
+    </p>
+  </motion.div>
+</div>
 
       {/* --- MASONRY GRID GALLERY --- */}
       <div className="max-w-7xl mx-auto">

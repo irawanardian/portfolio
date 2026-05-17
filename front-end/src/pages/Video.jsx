@@ -68,12 +68,21 @@ export default function Video() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4">
-            Cinematic <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Stories.</span>
-          </h1>
-          <p className="text-gray-400 max-w-2xl text-lg font-light">
-            Kumpulan karya videografi yang menangkap emosi, atmosfer, dan momen berharga.
-          </p>
+          <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
+  Motion Works
+</p>
+
+<h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight mb-6">
+  CINEMATIC <br />
+  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-500">
+    STORIES.
+  </span>
+</h1>
+
+<p className="text-lg md:text-xl text-gray-400 leading-relaxed max-w-3xl">
+  A collection of motion works, visual stories, and moving moments shaped
+  through rhythm, atmosphere, and real experience from the field.
+</p>
         </motion.div>
       </div>
 
@@ -136,7 +145,7 @@ export default function Video() {
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                     <PlayCircle size={32} className="opacity-50" />
                 </div>
-                <p>Belum ada video untuk kategori ini.</p>
+                <p>No video found in this category.</p>
               </motion.div>
             )}
           </AnimatePresence>
