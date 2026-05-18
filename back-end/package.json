@@ -1,0 +1,27 @@
+{
+  "name": "portfolio-irawan-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Irawan Ardiantoro portfolio",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "keywords": [],
+  "author": "Irawan Ardiantoro",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

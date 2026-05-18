@@ -35,3 +35,15 @@ yarn-error.log*
 
 # Shell history
 .bash_history
+
+# Backend dependencies
+back-end/node_modules/
+
+# Backend dependencies
+back-end/node_modules/
+
+# PostgreSQL local history
+.psql_history
+
+# Backend uploaded media
+back-end/public/uploads/

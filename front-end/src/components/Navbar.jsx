@@ -77,7 +77,7 @@ export default function Navbar() {
           backgroundColor:
             isScrolled || mobileMenuOpen
               ? "rgba(10, 10, 10, 0.82)"
-              : "transparent",
+              : "rgba(10, 10, 10, 0)",
           backdropFilter:
             isScrolled || mobileMenuOpen ? "blur(14px)" : "blur(0px)",
         }}
