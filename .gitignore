@@ -32,3 +32,6 @@ front-end/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Shell history
+.bash_history

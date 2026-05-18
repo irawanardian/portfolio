@@ -130,21 +130,21 @@ export default function Home() {
               icon={<Code2 className="text-blue-400" />}
               iconBg="bg-blue-500/20"
               title="Web Development"
-              desc="Membangun website, landing page, dashboard, dan aplikasi berbasis web dengan tampilan modern, responsif, dan mudah digunakan."
+              desc="Building websites, landing pages, dashboards, and web-based applications with modern, responsive, and user-friendly interfaces."
             />
 
             <SkillCard
               icon={<Camera className="text-purple-400" />}
               iconBg="bg-purple-500/20"
               title="Photo & Video"
-              desc="Membuat visual untuk event, produk, brand, wedding, dokumentasi, dan kebutuhan konten digital dengan pendekatan storytelling."
+              desc="Creating visuals for events, products, brands, weddings, documentation, and digital content through a storytelling approach."
             />
 
             <SkillCard
               icon={<Sparkles className="text-emerald-400" />}
               iconBg="bg-emerald-500/20"
               title="Creative Digital Solution"
-              desc="Menggabungkan website, konten visual, automation, dan ide kreatif menjadi solusi digital yang terlihat profesional dan bekerja dengan baik."
+              desc="Combining websites, visual content, automation, and creative ideas into digital solutions that look professional and work effectively."
             />
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function Home() {
               title="Modern Web Interface"
               year="2026"
               align="left"
-              desc="Membangun tampilan web yang cepat, responsif, dan punya karakter visual kuat untuk kebutuhan personal maupun bisnis."
+              desc="Building fast, responsive web interfaces with strong visual character for personal and business needs."
               icon={<MonitorSmartphone className="w-5 h-5" />}
             />
 
@@ -184,7 +184,7 @@ export default function Home() {
               title="Visual Storytelling"
               year="2025"
               align="right"
-              desc="Mengabadikan momen, suasana, dan cerita melalui foto serta video dengan tone visual yang cinematic dan emosional."
+              desc="Capturing moments, atmosphere, and stories through photo and video with a cinematic and emotional visual tone."
               icon={<Camera className="w-5 h-5" />}
             />
 
@@ -194,7 +194,7 @@ export default function Home() {
               title="Creative Tech Project"
               year="2026"
               align="left"
-              desc="Menggabungkan sistem, visual, dan workflow digital untuk membantu project tampil lebih profesional dan lebih mudah dikelola."
+              desc="Combining systems, visuals, and digital workflows to help projects look more professional and become easier to manage."
               icon={<PlayCircle className="w-5 h-5" />}
             />
           </div>
@@ -204,7 +204,7 @@ export default function Home() {
               href="/portfolio"
               className="inline-block border-b border-white pb-1 text-xl hover:text-gray-400 transition-colors"
             >
-              Lihat Semua Project
+              View All Projects
             </a>
           </div>
         </div>
@@ -223,8 +223,7 @@ export default function Home() {
               Behind The Work
             </p>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-              Saya percaya karya digital harus indah dilihat dan nyaman
-              digunakan.
+              I believe digital work should be beautiful to see and effortless to use.
             </h2>
           </motion.div>
 
@@ -236,13 +235,11 @@ export default function Home() {
             className="text-gray-400 text-lg leading-relaxed space-y-5"
           >
             <p>
-              Sebagai programmer, saya fokus membangun struktur, fungsi, dan
-              pengalaman pengguna yang rapi. Sebagai kreator multimedia, saya
-              memperhatikan rasa visual, komposisi, warna, dan cerita.
+              Every work is shaped with attention to structure, function, visual taste,
+              composition, color, and story.
             </p>
             <p>
-              Kombinasi keduanya membuat setiap project bukan hanya berjalan,
-              tapi juga punya identitas yang kuat.
+              The goal is to create projects that not only work well, but also carry a strong and memorable identity.
             </p>
           </motion.div>
         </div>
@@ -264,10 +261,10 @@ export default function Home() {
           </h2>
 
           <a
-            href="mailto:contact@email.com"
+            href="mailto:irawanardiantoro06@gmail.com"
             className="inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-full text-lg font-bold hover:bg-gray-200 transition-all transform hover:-translate-y-1"
           >
-            Mulai Diskusi <ArrowRight />
+            Start a Conversation <ArrowRight />
           </a>
         </motion.div>
       </section>

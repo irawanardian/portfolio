@@ -1,200 +1,205 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, ArrowRight, Send, Instagram, Linkedin, Youtube } from "lucide-react";
+import {
+  Mail,
+  MapPin,
+  Phone,
+  ArrowRight,
+  Instagram,
+  Linkedin,
+  Github,
+  MessageCircle,
+  Sparkles,
+} from "lucide-react";
+
+const contactLinks = [
+  {
+    icon: <Mail />,
+    label: "Email",
+    value: "irawanardiantoro06@gmail.com",
+    href: "mailto:irawanardiantoro06@gmail.com",
+  },
+  {
+    icon: <MapPin />,
+    label: "Location",
+    value: "Indonesia",
+  },
+];
+
+const socialLinks = [
+  {
+    icon: <Github />,
+    label: "GitHub",
+    href: "https://github.com/irawanardian",
+  },
+  {
+    icon: <Linkedin />,
+    label: "LinkedIn",
+    href: "https://linkedin.com/in/irawan-ardiantoro",
+  },
+];
 
 export default function Contact() {
-  const [formState, setFormState] = useState({
-    name: "",
-    email: "",
-    service: "",
-    message: ""
-  });
-
-  const handleChange = (e) => {
-    setFormState({ ...formState, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Logika kirim form di sini (misal ke EmailJS atau Formspree)
-    alert("Terima kasih! Pesan Anda telah terkirim (Simulasi).");
-  };
-
   return (
-    <div className="bg-neutral-950 min-h-screen text-white pt-24 pb-20 px-6 font-sans selection:bg-white selection:text-black">
-      
-      {/* --- HEADER --- */}
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="max-w-7xl mx-auto mb-20 md:mb-32"
-      >
-        <h1 className="text-5xl md:text-8xl font-bold tracking-tighter mb-6">
-          LET'S START <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-400 to-gray-700">A PROJECT.</span>
-        </h1>
-        <div className="h-1 w-24 bg-white/20"></div>
-      </motion.div>
-
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32">
-        
-        {/* --- LEFT COLUMN: INFO & SOCIALS --- */}
-        <motion.div 
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+    <main className="bg-neutral-950 min-h-screen text-white pt-24 pb-20 px-6 font-sans selection:bg-white selection:text-black">
+      <section className="max-w-7xl mx-auto">
+        {/* HEADER */}
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-20 md:mb-28"
         >
-          <h2 className="text-2xl font-semibold mb-6">Get in Touch</h2>
-          <p className="text-gray-400 text-lg leading-relaxed mb-12">
-            Punya ide visual yang ingin diwujudkan? Atau sekadar ingin menyapa? 
-            Saya selalu terbuka untuk diskusi proyek baru, kolaborasi kreatif, 
-            atau sekadar ngopi bareng.
+          <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
+            Contact
           </p>
 
-          <div className="space-y-8">
-            <ContactItem icon={<Mail />} label="Email" value="hello@yourvisuals.com" href="mailto:hello@yourvisuals.com" />
-            <ContactItem icon={<Phone />} label="Phone/WhatsApp" value="+62 812 3456 7890" href="https://wa.me/6281234567890" />
-            <ContactItem icon={<MapPin />} label="Studio" value="Jakarta Selatan, Indonesia" />
-          </div>
+          <h1 className="text-5xl md:text-8xl font-bold tracking-tighter leading-tight mb-6">
+            LET&apos;S START <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-400 to-gray-700">
+              A CONVERSATION.
+            </span>
+          </h1>
 
-          {/* Social Icons */}
-          <div className="mt-16 flex gap-6">
-            <SocialButton icon={<Instagram />} href="#" />
-            <SocialButton icon={<Youtube />} href="#" />
-            <SocialButton icon={<Linkedin />} href="#" />
-          </div>
+          <div className="h-1 w-24 bg-white/20 mb-8" />
+
+          <p className="text-lg md:text-xl text-gray-400 leading-relaxed max-w-3xl">
+            Have an idea, project, collaboration, or just want to say hello?
+            Reach me directly through the contact links below.
+          </p>
         </motion.div>
 
-        {/* --- RIGHT COLUMN: THE FORM --- */}
-        <motion.div 
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="bg-neutral-900/30 p-8 md:p-12 rounded-3xl border border-white/5"
-        >
-          <form onSubmit={handleSubmit} className="space-y-10">
-            
-            {/* Input Name */}
-            <div className="relative group">
-              <input
-                type="text"
-                name="name"
-                id="name"
-                value={formState.name}
-                onChange={handleChange}
-                className="w-full bg-transparent border-b border-gray-700 py-4 text-xl text-white focus:outline-none focus:border-white transition-colors peer placeholder-transparent"
-                placeholder="Nama Anda"
-                required
-              />
-              <label 
-                htmlFor="name" 
-                className="absolute left-0 -top-3.5 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-white peer-focus:text-sm"
-              >
-                Siapa Nama Anda?
-              </label>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+          {/* LEFT MAIN CTA */}
+          <motion.div
+            initial={{ opacity: 0, x: -35 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="lg:col-span-7"
+          >
+            <div className="relative h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-8 md:p-12">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent" />
+              <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+              <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
+
+              <div className="relative z-10 flex min-h-[480px] flex-col justify-between">
+                <div>
+                  <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/10">
+                    <MessageCircle className="w-7 h-7 text-blue-300" />
+                  </div>
+
+                  <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
+                    Direct Message
+                  </p>
+
+                  <h2 className="text-4xl md:text-6xl font-bold tracking-tighter leading-tight mb-6">
+                    Got something <br />
+                    in mind?
+                  </h2>
+
+                  <p className="text-gray-400 text-lg leading-relaxed max-w-2xl">
+                    Whether it&apos;s a digital work, visual story, creative
+                    collaboration, or a simple discussion, I&apos;m open to talk
+                    and explore what can be created.
+                  </p>
+                </div>
+
+                <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                  <a
+                    href="mailto:irawanardiantoro06@gmail.com"
+                    className="group inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-4 font-bold text-black transition-all hover:scale-105 hover:bg-gray-200"
+                  >
+                    Send Email
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* RIGHT CONTACT INFO */}
+          <motion.div
+            initial={{ opacity: 0, x: 35 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.25 }}
+            className="lg:col-span-5 space-y-6"
+          >
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8">
+              <div className="mb-8 flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-gray-400" />
+                <h2 className="text-xl font-bold">Contact Details</h2>
+              </div>
+
+              <div className="space-y-7">
+                {contactLinks.map((item) => (
+                  <ContactItem key={item.label} {...item} />
+                ))}
+              </div>
             </div>
 
-            {/* Input Email */}
-            <div className="relative group">
-              <input
-                type="email"
-                name="email"
-                id="email"
-                value={formState.email}
-                onChange={handleChange}
-                className="w-full bg-transparent border-b border-gray-700 py-4 text-xl text-white focus:outline-none focus:border-white transition-colors peer placeholder-transparent"
-                placeholder="Email Anda"
-                required
-              />
-              <label 
-                htmlFor="email" 
-                className="absolute left-0 -top-3.5 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-white peer-focus:text-sm"
-              >
-                Email Address
-              </label>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8">
+              <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-6">
+                Social
+              </p>
+
+              <div className="flex gap-4">
+                {socialLinks.map((item) => (
+                  <SocialButton key={item.label} {...item} />
+                ))}
+              </div>
             </div>
 
-            {/* Input Service (Dropdown Style but Minimalist) */}
-            <div className="relative group">
-              <select
-                name="service"
-                id="service"
-                value={formState.service}
-                onChange={handleChange}
-                className="w-full bg-transparent border-b border-gray-700 py-4 text-xl text-white focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer"
-              >
-                <option value="" disabled className="bg-neutral-900 text-gray-500">Pilih Jenis Project</option>
-                <option value="wedding" className="bg-neutral-900">Wedding / Prewedding</option>
-                <option value="commercial" className="bg-neutral-900">Commercial / Brand</option>
-                <option value="event" className="bg-neutral-900">Event Documentation</option>
-                <option value="other" className="bg-neutral-900">Lainnya</option>
-              </select>
-              <label className="absolute left-0 -top-3.5 text-gray-500 text-sm">
-                Apa yang bisa saya bantu?
-              </label>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8">
+              <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
+                Response
+              </p>
+              <p className="text-gray-400 leading-relaxed">
+                I usually respond as soon as possible. For project discussions,
+                please include a short context so the conversation can start
+                clearly.
+              </p>
             </div>
-
-            {/* Input Message */}
-            <div className="relative group">
-              <textarea
-                name="message"
-                id="message"
-                rows="4"
-                value={formState.message}
-                onChange={handleChange}
-                className="w-full bg-transparent border-b border-gray-700 py-4 text-xl text-white focus:outline-none focus:border-white transition-colors peer placeholder-transparent resize-none"
-                placeholder="Ceritakan tentang project Anda"
-                required
-              ></textarea>
-              <label 
-                htmlFor="message" 
-                className="absolute left-0 -top-3.5 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-4 peer-focus:-top-3.5 peer-focus:text-white peer-focus:text-sm"
-              >
-                Ceritakan Detail Project Anda
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="group w-full bg-white text-black py-5 rounded-full font-bold text-lg flex items-center justify-center gap-3 hover:bg-gray-200 transition-all transform hover:-translate-y-1"
-            >
-              Kirim Pesan 
-              <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </button>
-
-          </form>
-        </motion.div>
-
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      </section>
+    </main>
   );
 }
-
-// --- SUB-COMPONENTS ---
 
 function ContactItem({ icon, label, value, href }) {
   const content = (
-    <div className="flex items-center gap-6 group cursor-pointer">
-      <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-gray-400 group-hover:text-white group-hover:border-white transition-all">
+    <div className="group flex items-center gap-5">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 text-gray-400 transition-all group-hover:border-white/30 group-hover:text-white">
         {icon}
       </div>
-      <div>
-        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-lg md:text-xl font-medium text-white group-hover:text-gray-300 transition-colors">{value}</p>
+
+      <div className="min-w-0">
+        <p className="mb-1 text-xs uppercase tracking-widest text-gray-500">
+          {label}
+        </p>
+        <p className="break-words text-base md:text-lg font-medium text-white transition-colors group-hover:text-gray-300">
+          {value}
+        </p>
       </div>
     </div>
   );
 
-  return href ? <a href={href} target="_blank" rel="noopener noreferrer">{content}</a> : content;
+  if (!href) return content;
+
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {content}
+    </a>
+  );
 }
 
-function SocialButton({ icon, href }) {
+function SocialButton({ icon, label, href }) {
   return (
-    <a 
-      href={href} 
-      className="w-14 h-14 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-110"
+    <a
+      href={href}
+      aria-label={label}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-neutral-900 text-white transition-all duration-300 hover:scale-110 hover:bg-white hover:text-black"
     >
       {icon}
     </a>

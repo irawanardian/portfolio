@@ -90,7 +90,7 @@ export default function Navbar() {
             to="/"
             className="text-2xl font-bold tracking-tighter text-white z-50"
           >
-            IRAWAN<span className="text-gray-500">.</span>
+            IRAWAN ARDIANTORO<span className="text-gray-500">.</span>
           </Link>
 
           {/* DESKTOP MENU */}
