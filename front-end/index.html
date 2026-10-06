@@ -20,7 +20,8 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/logo-ia.png" />
-    <link rel="apple-touch-icon" href="/logo-ia.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png" />
 
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:title" content="Irawan Ardiantoro | Digital & Visual Portfolio" />
@@ -44,10 +45,28 @@
 
     <!-- Theme -->
     <meta name="theme-color" content="#0a0a0a" />
+
+    <!-- Progressive Web App / iOS -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Irawan" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .catch((error) => {
+              console.error("Service Worker registration failed:", error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
