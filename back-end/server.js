@@ -10,11 +10,14 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const ALLOWED_ORIGINS = [
+  "https://irawanardiantoro.vercel.app",
+  "https://irawan-mm.vercel.app",
+];
 
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: ALLOWED_ORIGINS,
     credentials: true
   })
 );
