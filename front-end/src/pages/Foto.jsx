@@ -182,7 +182,7 @@ export default function Foto() {
         {!loading && !error && currentPhotos.length > 0 && (
           <motion.div
             layout
-            className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3"
           >
             <AnimatePresence mode="popLayout">
               {currentPhotos.map((photo) => (
@@ -255,18 +255,18 @@ function PhotoCard({ photo, onOpen }) {
     null;
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-white/5 bg-neutral-900 transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-white/5">
+    <article className="group h-full overflow-hidden rounded-lg border border-white/5 bg-neutral-900 transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-white/5 sm:rounded-2xl">
       <button
         type="button"
         onClick={onOpen}
-        className="relative block aspect-video w-full overflow-hidden bg-neutral-800 text-left"
+        className="relative block aspect-square w-full overflow-hidden bg-neutral-800 text-left sm:aspect-video"
         aria-label={`View album ${photo.title}`}
       >
         {image ? (
           <img
             src={photoImageUrl(image, "thumbnail")}
             srcSet={photoSrcSet(image)}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 50vw, 33vw"
             onError={(event) => fallbackPhotoImage(event, image)}
             alt={photo.title}
             loading="lazy"
@@ -286,7 +286,7 @@ function PhotoCard({ photo, onOpen }) {
           </span>
         </div>
 
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+        <div className="absolute bottom-4 left-4 right-4 hidden items-center justify-between gap-3 sm:flex">
           <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs uppercase tracking-widest text-gray-200 backdrop-blur-md">
             {primaryTag}
           </span>
@@ -297,19 +297,25 @@ function PhotoCard({ photo, onOpen }) {
         </div>
       </button>
 
-      <div className="p-6">
-        <h2 className="mb-3 text-2xl font-bold tracking-tight">
-          {photo.title}
+      <div className="p-2 sm:p-6">
+        <h2 className="mb-0 line-clamp-2 text-[11px] font-bold leading-snug tracking-tight sm:mb-3 sm:text-2xl">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-left transition hover:text-gray-300"
+          >
+            {photo.title}
+          </button>
         </h2>
 
-        <p className="mb-5 line-clamp-2 min-h-[3rem] leading-relaxed text-gray-400">
+        <p className="mb-5 hidden line-clamp-2 min-h-[3rem] leading-relaxed text-gray-400 sm:block">
           {photo.shortDescription ||
             photo.description ||
             "A visual story captured through photography."}
         </p>
 
         {tags.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-6 hidden flex-wrap gap-2 sm:flex">
             {tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
@@ -321,7 +327,7 @@ function PhotoCard({ photo, onOpen }) {
           </div>
         )}
 
-        <div className="border-t border-white/10 pt-5">
+        <div className="hidden border-t border-white/10 pt-5 sm:block">
           <button
             type="button"
             onClick={onOpen}

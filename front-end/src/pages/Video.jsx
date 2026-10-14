@@ -74,7 +74,7 @@ export default function Video() {
 
   useEffect(() => {
     const updateVideosPerPage = () => {
-      if (window.innerWidth < 768) setVideosPerPage(4);
+      if (window.innerWidth < 768) setVideosPerPage(12);
       else if (window.innerWidth < 1024) setVideosPerPage(6);
       else setVideosPerPage(9);
     };
@@ -152,7 +152,7 @@ export default function Video() {
         {!loading && !errorMessage && (
           <motion.div
             layout
-            className="grid min-h-[400px] grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid min-h-[200px] grid-cols-3 items-start gap-2 sm:min-h-[400px] sm:grid-cols-2 sm:gap-8 lg:grid-cols-3"
           >
             <AnimatePresence mode="popLayout">
               {currentVideos.length > 0 ? (
@@ -217,10 +217,36 @@ function VideoProjectCard({ video, onWatch }) {
   const tags = Array.isArray(video.tags) ? video.tags : [];
   const primaryTag = tags[0] || "Motion Work";
   const hasPlayableVideo = Boolean(video.videoEmbed);
+  const externalVideoUrl = (() => {
+    try {
+      const url = new URL(video.externalUrl || "");
+      return ["http:", "https:"].includes(url.protocol)
+        ? url.href
+        : "";
+    } catch {
+      return "";
+    }
+  })();
+
+  const openVideo = () => {
+    if (hasPlayableVideo) {
+      onWatch();
+    } else if (externalVideoUrl) {
+      window.open(externalVideoUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-white/5 bg-neutral-900 transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-900/20">
-      <div className="relative aspect-video overflow-hidden bg-neutral-900">
+    <article className="group relative overflow-hidden rounded-lg border border-white/5 bg-neutral-900 transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-900/20 sm:rounded-2xl">
+      <div className="relative aspect-[3/4] overflow-hidden bg-neutral-900 sm:aspect-video">
+        {(hasPlayableVideo || externalVideoUrl) && (
+          <button
+            type="button"
+            onClick={openVideo}
+            aria-label={`Watch ${video.title}`}
+            className="absolute inset-0 z-10 sm:hidden"
+          />
+        )}
         {video.coverImage ? (
           <img
             src={video.coverImage}
@@ -233,7 +259,7 @@ function VideoProjectCard({ video, onWatch }) {
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+        <div className="absolute inset-0 hidden bg-gradient-to-t from-black/75 via-black/10 to-transparent sm:block" />
 
         <button
           type="button"
@@ -250,7 +276,7 @@ function VideoProjectCard({ video, onWatch }) {
           </span>
         </button>
 
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+        <div className="absolute bottom-4 left-4 right-4 hidden items-center justify-between gap-3 sm:flex">
           <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs uppercase tracking-[0.18em] text-gray-300 backdrop-blur-md">
             {primaryTag}
           </span>
@@ -261,17 +287,24 @@ function VideoProjectCard({ video, onWatch }) {
         </div>
       </div>
 
-      <div className="p-6">
-        <h2 className="mb-3 text-2xl font-bold tracking-tight text-white">
-          {video.title}
+      <div className="p-2 sm:p-6">
+        <h2 className="mb-0 line-clamp-2 text-[11px] font-bold leading-snug tracking-tight text-white sm:mb-3 sm:text-2xl">
+          <button
+            type="button"
+            onClick={openVideo}
+            disabled={!hasPlayableVideo && !externalVideoUrl}
+            className="text-left transition hover:text-gray-300 disabled:cursor-default"
+          >
+            {video.title}
+          </button>
         </h2>
 
-        <p className="mb-5 line-clamp-2 leading-relaxed text-gray-400">
+        <p className="mb-5 hidden line-clamp-2 leading-relaxed text-gray-400 sm:block">
           {video.shortDescription || video.description}
         </p>
 
         {tags.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-6 hidden flex-wrap gap-2 sm:flex">
             {tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
@@ -283,7 +316,7 @@ function VideoProjectCard({ video, onWatch }) {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-3 border-t border-white/10 pt-5">
+        <div className="hidden flex-wrap gap-3 border-t border-white/10 pt-5 sm:flex">
           {hasPlayableVideo && (
             <button
               type="button"
