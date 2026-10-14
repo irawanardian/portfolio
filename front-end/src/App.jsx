@@ -8,7 +8,9 @@ import Home from "./pages/Home";
 import Portfolio from "./pages/Portfolio";
 import DigitalPortfolio from "./pages/DigitalPortfolio";
 import DigitalProjectDetail from "./pages/DigitalProjectDetail";
+import ProjectCategories from "./pages/workspace/projects/Categories";
 import Foto from "./pages/Foto";
+import PhotoAlbumDetail from "./pages/PhotoAlbumDetail";
 import Video from "./pages/Video";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -82,6 +84,15 @@ export default function App() {
       />
 
       <Route
+        path="/portfolio/foto/:slug"
+        element={
+          <PublicLayout>
+            <PhotoAlbumDetail />
+          </PublicLayout>
+        }
+      />
+
+      <Route
         path="/portfolio/video"
         element={
           <PublicLayout>
@@ -126,11 +137,26 @@ export default function App() {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <Projects />
+              <ProjectCategories />
             </DashboardLayout>
           </ProtectedRoute>
         }
       />
+
+
+      {["web", "foto", "video"].map((type) => (
+        <Route
+          key={type}
+          path={`/projects/${type}`}
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Projects />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+      ))}
 
       <Route
         path="/projects/create"

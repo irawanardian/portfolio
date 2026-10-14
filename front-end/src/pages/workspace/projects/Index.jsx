@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -24,7 +24,29 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const projectTypes = {
+  web: {
+    category: "digital",
+    title: "Project Web",
+    createLabel: "New Web Project",
+  },
+  foto: {
+    category: "photo",
+    title: "Foto",
+    createLabel: "New Photo Album",
+  },
+  video: {
+    category: "video",
+    title: "Video",
+    createLabel: "New Video",
+  },
+};
+
 export default function Projects() {
+  const location = useLocation();
+  const type = location.pathname.split("/")[2];
+  const config = projectTypes[type] || projectTypes.web;
+
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -102,13 +124,26 @@ export default function Projects() {
     }
   };
 
+  const categoryProjects = projects.filter(
+    (project) => project.category === config.category
+  );
+
   const filteredProjects =
-  statusFilter === "all"
-    ? projects
-    : projects.filter((project) => project.status === statusFilter);
+    statusFilter === "all"
+      ? categoryProjects
+      : categoryProjects.filter(
+          (project) => project.status === statusFilter
+        );
 
   return (
     <section className="px-6 py-10 lg:px-10 lg:py-12">
+      <Link
+        to="/projects"
+        className="mb-7 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
+      >
+        ← Back to Projects
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
@@ -121,12 +156,11 @@ export default function Projects() {
           </p>
 
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl xl:text-5xl">
-            Manage portfolio projects.
+            Manage {config.title} Projects.
           </h1>
 
           <p className="mt-4 max-w-2xl text-gray-400">
-            View and manage digital works, photo stories, and motion works
-            stored in the portfolio database.
+            View, create, edit, and manage projects in this category.
           </p>
         </div>
 
@@ -153,11 +187,11 @@ export default function Projects() {
           </div>
 
           <Link
-            to="/projects/create"
+            to={`/projects/create?category=${config.category}`}
             className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:scale-105 hover:bg-gray-200"
           >
             <Plus className="h-5 w-5" />
-            New Project
+            {config.createLabel}
           </Link>
         </div>
       </motion.div>

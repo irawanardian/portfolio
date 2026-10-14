@@ -594,6 +594,149 @@ RETURNING id, project_id, image_url, caption, sort_order, image_type, created_at
   }
 });
 
+
+// Update image order within a project.
+router.put("/:id/images/reorder", requireAuth, async (req, res) => {
+  const projectId = Number(req.params.id);
+  const imageIds = req.body?.imageIds;
+
+  if (
+    !Number.isSafeInteger(projectId) ||
+    projectId <= 0 ||
+    !Array.isArray(imageIds) ||
+    imageIds.length > 500 ||
+    !imageIds.every(
+      (id) => Number.isSafeInteger(id) && id > 0
+    ) ||
+    new Set(imageIds).size !== imageIds.length
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid image order",
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const project = await client.query(
+      "SELECT id FROM projects WHERE id = $1 FOR UPDATE",
+      [projectId]
+    );
+
+    if (!project.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    const current = await client.query(
+      `SELECT id FROM project_images
+       WHERE project_id = $1
+       ORDER BY id
+       FOR UPDATE`,
+      [projectId]
+    );
+
+    const existingIds = current.rows.map((row) => row.id);
+    const existingSet = new Set(existingIds);
+
+    if (
+      imageIds.length !== existingIds.length ||
+      !imageIds.every((id) => existingSet.has(id))
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        success: false,
+        message: "Gallery has changed. Refresh and try again.",
+      });
+    }
+
+    for (let index = 0; index < imageIds.length; index++) {
+      await client.query(
+        `UPDATE project_images
+         SET sort_order = $1
+         WHERE project_id = $2 AND id = $3`,
+        [index + 1, projectId, imageIds[index]]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    return res.json({
+      success: true,
+      message: "Photo order saved",
+      data: imageIds.map((id, index) => ({
+        id,
+        sortOrder: index + 1,
+      })),
+    });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("Reorder images error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reorder images",
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
+// Update a project image caption.
+router.patch("/:id/images/:imageId/caption", requireAuth, async (req, res) => {
+  try {
+    const projectId = Number(req.params.id);
+    const imageId = Number(req.params.imageId);
+    const { caption } = req.body || {};
+
+    if (
+      !Number.isSafeInteger(projectId) || projectId <= 0 ||
+      !Number.isSafeInteger(imageId) || imageId <= 0 ||
+      typeof caption !== "string" || caption.length > 500
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid image caption",
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE project_images
+       SET caption = $1
+       WHERE id = $2 AND project_id = $3
+       RETURNING id, caption`,
+      [caption.trim(), imageId, projectId]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({
+        success: false,
+        message: "Image not found in this project",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Photo caption updated",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Update photo caption error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update photo caption",
+    });
+  }
+});
+
 router.delete("/:id/images/:imageId", requireAuth, async (req, res) => {
   try {
     const { id, imageId } = req.params;

@@ -1,198 +1,337 @@
-import { useState } from "react";
+import { photoImageUrl, photoSrcSet, fallbackPhotoImage } from "../lib/photoImages";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, X, ZoomIn } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Images,
+  Loader2,
+} from "lucide-react";
+import { apiRequest } from "../lib/api";
 
-// --- DUMMY DATA FOTO (Ganti nanti dengan data aslimu) ---
-// --- CURATED AESTHETIC PHOTOS ---
-const photos = [
-  { 
-    id: 1, 
-    src: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1974&auto=format&fit=crop", 
-    title: "Eternal Vows", 
-    category: "Wedding" 
-  },
-  { 
-    id: 2, 
-    src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop", 
-    title: "Raw Portrait", 
-    category: "Editorial" 
-  },
-  { 
-    id: 3, 
-    src: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop", 
-    title: "The Crowd", 
-    category: "Event" 
-  },
-  { 
-    id: 4, 
-    src: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1887&auto=format&fit=crop", 
-    title: "Urban Solitude", 
-    category: "Street" 
-  },
-  { 
-    id: 5, 
-    src: "https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=2070&auto=format&fit=crop", 
-    title: "Seaside Love", 
-    category: "Wedding" 
-  },
-  { 
-    id: 6, 
-    src: "https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=1000&auto=format&fit=crop", 
-    title: "Minimalist Geometry", 
-    category: "Architecture" 
-  },
-  { 
-    id: 7, 
-    src: "https://images.unsplash.com/photo-1555685812-4b943f3fb616?q=80&w=2070&auto=format&fit=crop", 
-    title: "Neon Nights", 
-    category: "Cyberpunk" 
-  },
-  { 
-    id: 8, 
-    src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop", 
-    title: "Timeless Piece", 
-    category: "Product" 
-  },
-  { 
-    id: 9, 
-    src: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop", 
-    title: "Sonic Depth", 
-    category: "Commercial" 
-  },
-  { 
-    id: 10, 
-    src: "https://images.unsplash.com/photo-1504198458649-3128b932f49e?q=80&w=987&auto=format&fit=crop", 
-    title: "Tokyo Rain", 
-    category: "Street" 
-  },
-  { 
-    id: 11, 
-    src: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1000&auto=format&fit=crop", 
-    title: "Feminine Strength", 
-    category: "Portrait" 
-  },
-  { 
-    id: 12, 
-    src: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop", 
-    title: "Stage Lights", 
-    category: "Music" 
-  }
+const categories = [
+  "All",
+  "Wedding",
+  "Prewedding",
+  "Engagement",
+  "Portrait",
+  "Event",
+  "Product",
+  "Landscape",
+  "Street",
+  "Corporate",
 ];
 
 export default function Foto() {
-  const [selectedImage, setSelectedImage] = useState(null);
+  const navigate = useNavigate();
+  const [photos, setPhotos] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(9);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPhotos() {
+      try {
+        const result = await apiRequest(
+          "/api/projects?category=photo"
+        );
+
+        if (!cancelled) {
+          setPhotos(
+            Array.isArray(result.data) ? result.data : []
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Unable to load photo albums right now.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadPhotos();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const update = () => {
+      setPerPage(window.innerWidth < 768 ? 4 : 9);
+    };
+
+    update();
+    window.addEventListener("resize", update);
+
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, perPage]);
+
+  const filteredPhotos = photos.filter((photo) => {
+    if (selectedCategory === "All") return true;
+
+    return (photo.tags || []).some(
+      (tag) =>
+        tag.toLowerCase() === selectedCategory.toLowerCase()
+    );
+  });
+
+  const totalPages = Math.ceil(filteredPhotos.length / perPage);
+
+  const currentPhotos = filteredPhotos.slice(
+    (currentPage - 1) * perPage,
+    currentPage * perPage
+  );
 
   return (
-    <div className="bg-neutral-950 min-h-screen text-white pt-24 pb-20 px-4 md:px-8 font-sans">
-      
-      {/* --- HEADER --- */}
-      <div className="max-w-7xl mx-auto mb-16">
-  <Link
-    to="/portfolio"
-    className="mb-10 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
-  >
-    <ArrowLeft className="w-4 h-4" />
-    Back to Portfolio
-  </Link>
+    <div className="min-h-screen bg-neutral-950 px-6 pb-24 pt-24 font-sans text-white">
+      <div className="mx-auto mb-12 max-w-7xl">
+        <Link
+          to="/portfolio"
+          className="group mb-6 inline-flex items-center gap-2 text-gray-500 transition hover:text-white"
+        >
+          <ArrowLeft
+            size={20}
+            className="transition-transform group-hover:-translate-x-1"
+          />
+          <span className="text-sm font-medium uppercase tracking-widest">
+            Back to Portfolio
+          </span>
+        </Link>
 
-  <motion.div
-    initial={{ opacity: 0, y: 35 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8 }}
-    className="max-w-3xl"
-  >
-    <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
-      Photo Stories
-    </p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <p className="mb-4 text-sm uppercase tracking-[0.3em] text-gray-500">
+            Photo Stories
+          </p>
 
-    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight mb-6">
-      VISUAL <br />
-      <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-500">
-        JOURNAL.
-      </span>
-    </h1>
+          <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tighter md:text-7xl">
+            VISUAL <br />
+            <span className="bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent">
+              JOURNAL.
+            </span>
+          </h1>
 
-    <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
-      A collection of still moments, visual details, and stories captured
-      through light, composition, and real experience from the field.
-    </p>
-  </motion.div>
-</div>
+          <p className="max-w-3xl text-lg leading-relaxed text-gray-400 md:text-xl">
+            A collection of still moments, visual details,
+            and stories captured through light, composition,
+            and real experience from the field.
+          </p>
+        </motion.div>
+      </div>
 
-      {/* --- MASONRY GRID GALLERY --- */}
-      <div className="max-w-7xl mx-auto">
-        {/* Tailwind 'columns' utility membuat efek Masonry dengan mudah */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-          
-          {photos.map((photo, index) => (
-            <motion.div
-              key={photo.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer bg-gray-900"
-              onClick={() => setSelectedImage(photo)}
+      {/* CATEGORY FILTER */}
+      <div className="mx-auto mb-12 max-w-7xl">
+        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-4">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setSelectedCategory(category)}
+              className={`whitespace-nowrap rounded-full border px-6 py-2 text-sm font-medium transition-all duration-300 ${
+                selectedCategory === category
+                  ? "border-white bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                  : "border-white/10 text-gray-400 hover:border-white hover:text-white"
+              }`}
             >
-              <img
-                src={photo.src}
-                alt={photo.title}
-                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0"
-              />
-              
-              {/* Overlay Hover */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4">
-                <ZoomIn className="text-white mb-2 opacity-80" />
-                <h3 className="text-xl font-bold tracking-wider">{photo.title}</h3>
-                <span className="text-xs text-gray-400 uppercase tracking-widest mt-1">{photo.category}</span>
-              </div>
-            </motion.div>
+              {category}
+            </button>
           ))}
-
         </div>
       </div>
 
-      {/* --- LIGHTBOX (MODAL) --- */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
-            onClick={() => setSelectedImage(null)} // Tutup jika klik background
-          >
-            {/* Close Button */}
-            <button 
-              className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"
-              onClick={() => setSelectedImage(null)}
-            >
-              <X size={40} />
-            </button>
+      {/* PHOTO ALBUMS */}
+      <div className="mx-auto max-w-7xl">
+        {loading && (
+          <div className="flex min-h-[350px] items-center justify-center">
+            <Loader2 className="h-9 w-9 animate-spin text-gray-500" />
+          </div>
+        )}
 
-            {/* Image Container */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="relative max-w-5xl max-h-[90vh] rounded-lg overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()} // Mencegah tutup jika klik gambar
-            >
-              <img
-                src={selectedImage.src}
-                alt={selectedImage.title}
-                className="w-full h-full object-contain max-h-[85vh]"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-6 pt-12">
-                 <h3 className="text-2xl font-bold text-white">{selectedImage.title}</h3>
-                 <p className="text-gray-300 text-sm">{selectedImage.category}</p>
-              </div>
-            </motion.div>
+        {!loading && error && (
+          <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-12 text-center text-red-300">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && currentPhotos.length === 0 && (
+          <div className="flex min-h-[350px] flex-col items-center justify-center gap-4 rounded-3xl border border-white/10 bg-white/[0.02] text-center">
+            <Images className="h-12 w-12 text-gray-600" />
+            <h2 className="text-2xl font-semibold">
+              No Photo Albums Yet
+            </h2>
+            <p className="max-w-sm px-4 text-gray-500">
+              Photo stories for this category will appear here.
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && currentPhotos.length > 0 && (
+          <motion.div
+            layout
+            className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            <AnimatePresence mode="popLayout">
+              {currentPhotos.map((photo) => (
+                <motion.div
+                  key={`${photo.id}-${selectedCategory}`}
+                  layout
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.94 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <PhotoCard
+                    photo={photo}
+                    onOpen={() => navigate(`/portfolio/foto/${encodeURIComponent(photo.slug)}`)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
-      </AnimatePresence>
+
+        {/* PAGINATION */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-20 flex flex-wrap items-center justify-center gap-4">
+            {Array.from(
+              { length: totalPages },
+              (_, index) => index + 1
+            ).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => {
+                  setCurrentPage(page);
+                  window.scrollTo({
+                    top: 350,
+                    behavior: "smooth",
+                  });
+                }}
+                className={`relative px-4 py-2 text-lg font-medium transition ${
+                  currentPage === page
+                    ? "text-white"
+                    : "text-gray-600 hover:text-white"
+                }`}
+              >
+                {page}
+                {currentPage === page && (
+                  <motion.div
+                    layoutId="photo-pagination"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-white"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
 
     </div>
+  );
+}
+
+function PhotoCard({ photo, onOpen }) {
+  const tags = Array.isArray(photo.tags) ? photo.tags : [];
+  const primaryTag = tags[0] || "Photography";
+
+  const image =
+    photo.coverImage ||
+    photo.images?.[0]?.imageUrl ||
+    null;
+
+  return (
+    <article className="group overflow-hidden rounded-2xl border border-white/5 bg-neutral-900 transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-white/5">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="relative block aspect-video w-full overflow-hidden bg-neutral-800 text-left"
+        aria-label={`View album ${photo.title}`}
+      >
+        {image ? (
+          <img
+            src={photoImageUrl(image, "thumbnail")}
+            srcSet={photoSrcSet(image)}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            onError={(event) => fallbackPhotoImage(event, image)}
+            alt={photo.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Images className="h-12 w-12 text-gray-600" />
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <span className="rounded-full bg-white/15 p-5 backdrop-blur-md">
+            <Images className="h-8 w-8 text-white" />
+          </span>
+        </div>
+
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs uppercase tracking-widest text-gray-200 backdrop-blur-md">
+            {primaryTag}
+          </span>
+
+          <span className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-gray-300 backdrop-blur-md">
+            {photo.year || "Active"}
+          </span>
+        </div>
+      </button>
+
+      <div className="p-6">
+        <h2 className="mb-3 text-2xl font-bold tracking-tight">
+          {photo.title}
+        </h2>
+
+        <p className="mb-5 line-clamp-2 min-h-[3rem] leading-relaxed text-gray-400">
+          {photo.shortDescription ||
+            photo.description ||
+            "A visual story captured through photography."}
+        </p>
+
+        {tags.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {tags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-gray-300"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t border-white/10 pt-5">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:scale-105 hover:bg-gray-200"
+          >
+            View Album
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }

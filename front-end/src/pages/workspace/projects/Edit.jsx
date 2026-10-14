@@ -1,3 +1,5 @@
+import PhotoCaptionEditor from "../../../components/workspace/PhotoCaptionEditor";
+import BulkPhotoUpload from "../../../components/workspace/BulkPhotoUpload";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -20,6 +22,8 @@ import {
   errorSwal,
   closeSwal,
 } from "../../../lib/swal";
+
+const PHOTO_CATEGORIES = ["Wedding", "Prewedding", "Engagement", "Portrait", "Event", "Product", "Landscape", "Street", "Corporate"];
 
 const initialForm = {
   title: "",
@@ -50,8 +54,19 @@ export default function EditProject() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const projectsBackUrl =
+    form.category === "photo"
+      ? "/projects/foto"
+      : form.category === "video"
+        ? "/projects/video"
+        : "/projects/web";
+
 
   const [projectImages, setProjectImages] = useState([]);
+  const [orderDirty, setOrderDirty] = useState(false);
+  const [orderSaving, setOrderSaving] = useState(false);
+  const [draggedImageId, setDraggedImageId] = useState(null);
+
 const [imageForm, setImageForm] = useState({
   imageUrl: "",
   caption: "",
@@ -99,7 +114,17 @@ const [imageForm, setImageForm] = useState({
           sortOrder: String(project.sortOrder || 0),
           tags: Array.isArray(project.tags) ? project.tags.join(", ") : "",
         });
-        setProjectImages(Array.isArray(project.images) ? project.images : []);
+        setProjectImages(
+          Array.isArray(project.images)
+            ? [...project.images].sort(
+                (a, b) =>
+                  Number(a.sortOrder || 0) -
+                    Number(b.sortOrder || 0) ||
+                  Number(a.id) - Number(b.id)
+              )
+            : []
+        );
+        setOrderDirty(false);
       } catch (error) {
         setErrorMessage(error.message || "Failed to load project.");
       } finally {
@@ -331,6 +356,90 @@ const handleUploadCoverImage = async (e) => {
   }
 };
 
+
+const reorderPhotos = (sourceId, targetId) => {
+  if (sourceId === targetId || orderSaving) return;
+
+  setProjectImages((previous) => {
+    const items = [...previous];
+    const from = items.findIndex((item) => item.id === sourceId);
+    const to = items.findIndex((item) => item.id === targetId);
+
+    if (from < 0 || to < 0) return previous;
+
+    const [moved] = items.splice(from, 1);
+    items.splice(to, 0, moved);
+    return items;
+  });
+
+  setOrderDirty(true);
+};
+
+const movePhoto = (imageId, direction) => {
+  if (orderSaving) return;
+
+  setProjectImages((previous) => {
+    const items = [...previous];
+    const from = items.findIndex((item) => item.id === imageId);
+    const to = from + direction;
+
+    if (from < 0 || to < 0 || to >= items.length) {
+      return previous;
+    }
+
+    [items[from], items[to]] = [items[to], items[from]];
+    return items;
+  });
+
+  setOrderDirty(true);
+};
+
+const handleSavePhotoOrder = async () => {
+  if (!orderDirty || orderSaving) return;
+
+  setOrderSaving(true);
+
+  try {
+    const token = getToken();
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    await apiRequest(`/api/projects/${id}/images/reorder`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        imageIds: projectImages.map((image) => image.id),
+      }),
+    });
+
+    setProjectImages((previous) =>
+      previous.map((image, index) => ({
+        ...image,
+        sortOrder: index + 1,
+      }))
+    );
+
+    setOrderDirty(false);
+
+    await successSwal({
+      title: "Photo order saved",
+      text: "Your gallery order has been updated.",
+    });
+  } catch (error) {
+    await errorSwal({
+      title: "Unable to save order",
+      text: error.message || "Please try again.",
+    });
+  } finally {
+    setOrderSaving(false);
+  }
+};
+
 const handleDeleteImage = async (image) => {
   const confirmation = await confirmSwal({
     title: "Delete image?",
@@ -451,7 +560,7 @@ await closeSwal();
         text: "Your project has been updated successfully.",
         });
 
-        navigate("/projects");
+        navigate(projectsBackUrl);
     } catch (error) {
         await closeSwal();
 
@@ -487,7 +596,7 @@ await closeSwal();
         className="mx-auto max-w-5xl"
       >
         <Link
-          to="/projects"
+          to={projectsBackUrl}
           className="mb-8 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -662,6 +771,62 @@ await closeSwal();
   )}
 </div>
 
+
+            {form.category === "photo" && (
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm text-gray-400">
+                  Photo Category
+                </label>
+                <select
+                  value={
+                    form.tags
+                      .split(",")
+                      .map((tag) => tag.trim())
+                      .find((tag) =>
+                        PHOTO_CATEGORIES.some(
+                          (category) =>
+                            category.toLowerCase() === tag.toLowerCase()
+                        )
+                      ) || ""
+                  }
+                  onChange={(event) => {
+                    setForm((prev) => {
+                      const otherTags = prev.tags
+                        .split(",")
+                        .map((tag) => tag.trim())
+                        .filter(
+                          (tag) =>
+                            tag &&
+                            !PHOTO_CATEGORIES.some(
+                              (category) =>
+                                category.toLowerCase() === tag.toLowerCase()
+                            )
+                        );
+
+                      return {
+                        ...prev,
+                        tags: [event.target.value, ...otherTags].join(", "),
+                      };
+                    });
+                  }}
+                  className="w-full rounded-2xl border border-white/10 bg-neutral-900 px-4 py-4 text-white outline-none focus:border-white/40"
+                >
+                  <option value="" className="bg-neutral-900 text-white">
+                    Select category
+                  </option>
+                  <option className="bg-neutral-900 text-white" value="Wedding">Wedding</option>
+                  <option className="bg-neutral-900 text-white" value="Prewedding">Prewedding</option>
+                  <option className="bg-neutral-900 text-white" value="Engagement">Engagement</option>
+                  <option className="bg-neutral-900 text-white" value="Portrait">Portrait</option>
+                  <option className="bg-neutral-900 text-white" value="Event">Event</option>
+                  <option className="bg-neutral-900 text-white" value="Product">Product</option>
+                  <option className="bg-neutral-900 text-white" value="Landscape">Landscape</option>
+                  <option className="bg-neutral-900 text-white" value="Street">Street</option>
+                  <option className="bg-neutral-900 text-white" value="Corporate">Corporate</option>
+                </select>
+              </div>
+            )}
+
             <div className="md:col-span-2">
               <FormField
                 label="Tags"
@@ -727,7 +892,18 @@ await closeSwal();
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+
+                {form.category === "photo" && (
+                  <BulkPhotoUpload
+                    projectId={id}
+                    existingCount={projectImages.length}
+                    onImagesAdded={(images) =>
+                      setProjectImages((prev) => [...prev, ...images])
+                    }
+                  />
+                )}
+
+<div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                     <div className="md:col-span-2">
   <FormField
     label="Image URL"
@@ -820,6 +996,35 @@ await closeSwal();
                     </label>
                 </div>
 
+
+                {form.category === "photo" &&
+                  projectImages.length > 1 && (
+                    <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-5">
+                      <div>
+                        <h3 className="font-semibold text-white">
+                          Arrange Photo Order
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-400">
+                          Drag photos or use the arrow buttons.
+                        </p>
+                        {orderDirty && (
+                          <p className="mt-2 text-xs text-amber-300">
+                            Unsaved order changes
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSavePhotoOrder}
+                        disabled={!orderDirty || orderSaving}
+                        className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {orderSaving ? "Saving..." : "Save Photo Order"}
+                      </button>
+                    </div>
+                  )}
+
                 {projectImages.length === 0 ? (
                     <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-8 text-center">
                     <ImageIcon className="mx-auto mb-3 h-10 w-10 text-gray-500" />
@@ -830,7 +1035,31 @@ await closeSwal();
                     {projectImages.map((image) => (
                         <div
                         key={image.id}
-                        className="overflow-hidden rounded-3xl border border-white/10 bg-black/20"
+                        draggable={form.category === "photo" && !orderSaving}
+                        onDragStart={(event) => {
+                          if (form.category !== "photo") return;
+                          setDraggedImageId(image.id);
+                          event.dataTransfer.effectAllowed = "move";
+                        }}
+                        onDragOver={(event) => {
+                          if (form.category === "photo") {
+                            event.preventDefault();
+                          }
+                        }}
+                        onDrop={(event) => {
+                          if (form.category !== "photo") return;
+                          event.preventDefault();
+                          if (draggedImageId !== null) {
+                            reorderPhotos(draggedImageId, image.id);
+                          }
+                          setDraggedImageId(null);
+                        }}
+                        onDragEnd={() => setDraggedImageId(null)}
+                        className={`overflow-hidden rounded-3xl border border-white/10 bg-black/20 ${
+                          form.category === "photo"
+                            ? "cursor-grab active:cursor-grabbing"
+                            : ""
+                        }`}
                         >
                         <div className="aspect-video overflow-hidden bg-neutral-900">
                             <img
@@ -841,6 +1070,21 @@ await closeSwal();
                         </div>
 
                         <div className="p-4">
+                          {form.category === "photo" && (
+                            <PhotoCaptionEditor
+                              projectId={id}
+                              image={image}
+                              onSaved={(imageId, caption) => {
+                                setProjectImages((previous) =>
+                                  previous.map((item) =>
+                                    item.id === imageId
+                                      ? { ...item, caption }
+                                      : item
+                                  )
+                                );
+                              }}
+                            />
+                          )}
                          <div className="mb-3 flex items-start justify-between gap-3">
                             <p className="line-clamp-2 text-sm text-gray-400">
                                 {image.caption || image.imageUrl}
@@ -850,6 +1094,34 @@ await closeSwal();
                                 {image.imageType === "cover_slider" ? "Cover" : "Gallery"}
                             </span>
                          </div>
+
+                            {form.category === "photo" && (
+                              <div className="mb-3 flex items-center gap-3">
+                                <span className="text-xs text-gray-400">
+                                  Position {projectImages.findIndex(
+                                    (item) => item.id === image.id
+                                  ) + 1}
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={orderSaving || projectImages[0]?.id === image.id}
+                                  onClick={() => movePhoto(image.id, -1)}
+                                  className="rounded-full border border-white/20 px-3 py-1 text-xs disabled:opacity-30"
+                                  aria-label="Move image earlier"
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={orderSaving || projectImages[projectImages.length - 1]?.id === image.id}
+                                  onClick={() => movePhoto(image.id, 1)}
+                                  className="rounded-full border border-white/20 px-3 py-1 text-xs disabled:opacity-30"
+                                  aria-label="Move image later"
+                                >
+                                  ↓
+                                </button>
+                              </div>
+                            )}
 
                             <div className="flex flex-wrap gap-2">
                             <button
@@ -879,7 +1151,7 @@ await closeSwal();
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <Link
-              to="/projects"
+              to={projectsBackUrl}
               className="inline-flex items-center justify-center rounded-full border border-white/10 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
             >
               Cancel

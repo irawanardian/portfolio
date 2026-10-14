@@ -1,5 +1,6 @@
+import CreatePhotoAlbum from "./CreatePhotoAlbum";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { apiRequest } from "../../../lib/api";
@@ -35,8 +36,19 @@ function wait(ms) {
 
 export default function CreateProject() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [form, setForm] = useState(initialForm);
+  const requestedCategory = searchParams.get("category");
+  const initialCategory = ["digital", "photo", "video"].includes(
+    requestedCategory
+  )
+    ? requestedCategory
+    : "digital";
+
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    category: initialCategory,
+  }));
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -115,7 +127,13 @@ export default function CreateProject() {
         text: "Your project has been created successfully.",
       });
 
-      navigate("/projects");
+      navigate(
+        form.category === "video"
+          ? "/projects/video"
+          : form.category === "photo"
+            ? "/projects/foto"
+            : "/projects/web"
+      );
     } catch (error) {
       await closeSwal();
 
@@ -130,6 +148,10 @@ export default function CreateProject() {
       setLoading(false);
     }
   };
+
+  if (initialCategory === "photo") {
+    return <CreatePhotoAlbum />;
+  }
 
   return (
     <section className="px-6 py-10 lg:px-10 lg:py-12">

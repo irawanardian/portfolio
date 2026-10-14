@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { requireAuth } from "../middleware/auth.js";
+import { optimizeImage } from "../services/imageOptimizer.js";
 
 const router = express.Router();
 
@@ -43,12 +44,21 @@ const upload = multer({
   },
 });
 
-router.post("/projects", requireAuth, upload.single("image"), (req, res) => {
+router.post("/projects", requireAuth, upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       success: false,
       message: "Image file is required",
     });
+  }
+
+  try {
+    await optimizeImage(req.file.path);
+  } catch (error) {
+    console.error("Image optimization failed:", error);
+
+    // Original is kept so existing upload behavior remains valid.
+    // Missing variants will fall back to the original on the frontend.
   }
 
   const baseUrl = `${req.protocol}://${req.get("host")}`;

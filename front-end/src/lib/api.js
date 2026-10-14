@@ -1,5 +1,9 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const publicApiUrl = "https://portfolio-api.ambulancegema.com";
+
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? publicApiUrl : "")
+).replace(/\/+$/, "");
 
 export async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -13,7 +17,9 @@ export async function apiRequest(path, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data?.message || "Request failed");
+    throw new Error(
+      data?.message || `API request failed (${response.status})`
+    );
   }
 
   return data;
