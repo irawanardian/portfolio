@@ -1,3 +1,4 @@
+import MobilePhotoMasonry from "../components/portfolio/MobilePhotoMasonry";
 import { photoImageUrl, photoSrcSet, fallbackPhotoImage } from "../lib/photoImages";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -19,6 +20,7 @@ export default function PhotoAlbumDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeIndex, setActiveIndex] = useState(null);
+  const [mobileVisibleCount, setMobileVisibleCount] = useState(12);
   const swipeStart = useRef(null);
 
   const handleTouchStart = (event) => {
@@ -78,6 +80,7 @@ export default function PhotoAlbumDetail() {
       setError("");
       setAlbum(null);
       setActiveIndex(null);
+      setMobileVisibleCount(12);
 
       try {
         const result = await apiRequest(
@@ -262,7 +265,14 @@ export default function PhotoAlbumDetail() {
             )}
 
             {displayImages.length ? (
-              <div className="columns-1 gap-5 space-y-5 sm:columns-2 lg:columns-3">
+              <>
+                <MobilePhotoMasonry
+                  images={displayImages.slice(0, mobileVisibleCount)}
+                  albumTitle={album.title}
+                  onOpen={setActiveIndex}
+                />
+
+                <div className="hidden sm:block sm:columns-2 sm:gap-5 sm:space-y-5 lg:columns-3">
                 {displayImages.map((image, index) => (
                   <motion.button
                     key={image.id || index}
@@ -272,13 +282,13 @@ export default function PhotoAlbumDetail() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4 }}
-                    className="group relative block w-full break-inside-avoid overflow-hidden rounded-2xl bg-neutral-900 text-left"
+                    className={`group relative w-full break-inside-avoid overflow-hidden rounded-xl bg-neutral-900 text-left sm:rounded-2xl ${index >= mobileVisibleCount ? "hidden sm:block" : "block"}`}
                     aria-label={`View photograph ${index + 1}`}
                   >
                     <img
                       src={photoImageUrl(image.imageUrl, "thumbnail")}
                       srcSet={photoSrcSet(image.imageUrl)}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                       onError={(event) =>
                         fallbackPhotoImage(event, image.imageUrl)
                       }
@@ -294,13 +304,35 @@ export default function PhotoAlbumDetail() {
                     </div>
                   </motion.button>
                 ))}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-3xl border border-white/10">
                 <Images className="h-10 w-10 text-gray-500" />
                 <p className="text-gray-400">
                   No photographs available yet.
                 </p>
+              </div>
+            )}
+
+
+            {displayImages.length > mobileVisibleCount && (
+              <div className="mt-8 text-center sm:hidden">
+                <p className="mb-4 text-sm text-gray-400">
+                  Showing {mobileVisibleCount} of {displayImages.length} photos
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobileVisibleCount((count) =>
+                      Math.min(count + 12, displayImages.length)
+                    )
+                  }
+                  className="rounded-full border border-white/20 bg-white/10 px-8 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                >
+                  Load More Photos
+                </button>
               </div>
             )}
 

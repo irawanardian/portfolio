@@ -3,7 +3,7 @@ import { Images, Loader2, UploadCloud, X } from "lucide-react";
 import { apiRequest, API_BASE_URL } from "../../lib/api";
 import { getToken } from "../../lib/auth";
 
-const MAX_FILES = 20;
+const MAX_FILES = 100;
 const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
 
@@ -192,7 +192,7 @@ export default function BulkPhotoUpload({
             Bulk Photo Upload
           </h3>
           <p className="text-sm text-gray-400">
-            Upload up to 20 photos at once. Maximum 5 MB each.
+            Upload up to 100 photos at once. Maximum 5 MB each.
           </p>
         </div>
       </div>
@@ -203,7 +203,7 @@ export default function BulkPhotoUpload({
           Select Photos
         </span>
         <span className="text-xs text-gray-500">
-          JPG, PNG, WebP — Max 20 files
+          JPG, PNG, WebP — Max 100 files
         </span>
 
         <input

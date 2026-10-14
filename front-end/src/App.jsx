@@ -1,3 +1,4 @@
+import ScrollToTop from "./components/ScrollToTop";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { getToken } from "./lib/auth";
 
@@ -37,7 +38,9 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route
         path="/"
         element={
@@ -201,6 +204,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+      </Routes>
+    </>
   );
 }

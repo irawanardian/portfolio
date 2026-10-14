@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { apiRequest } from "../lib/api";
+import { photoImageUrl } from "../lib/photoImages";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -28,7 +31,138 @@ const staggerContainer = {
   },
 };
 
+
+function getProjectLink(project) {
+  switch (project.category) {
+    case "digital":
+      return "/portfolio/digital";
+
+    case "photo":
+      return "/portfolio/foto";
+
+    case "video":
+      return "/portfolio/video";
+
+    default:
+      return "/portfolio";
+  }
+}
+
+function getProjectDisplay(project) {
+  switch (project.category) {
+    case "photo":
+      return {
+        label: "PHOTOGRAPHY",
+        icon: <Camera className="w-5 h-5" />,
+      };
+
+    case "video":
+      return {
+        label: "VIDEOGRAPHY",
+        icon: <PlayCircle className="w-5 h-5" />,
+      };
+
+    default:
+      return {
+        label: "WEB DEVELOPMENT",
+        icon: <MonitorSmartphone className="w-5 h-5" />,
+      };
+  }
+}
+
 export default function Home() {
+  const [featuredProjects, setFeaturedProjects] = useState([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [featuredError, setFeaturedError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFeatured() {
+      try {
+        const result = await apiRequest("/api/projects");
+
+        if (cancelled) return;
+
+        const projects = Array.isArray(result.data)
+          ? result.data.filter(
+              (project) =>
+                project.status === "published" &&
+                ["digital", "photo", "video"].includes(
+                  project.category
+                ) &&
+                project.slug
+            )
+          : [];
+
+        setFeaturedProjects(projects);
+        setFeaturedError(false);
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Featured projects:", error);
+          setFeaturedError(true);
+        }
+      } finally {
+        if (!cancelled) setFeaturedLoading(false);
+      }
+    }
+
+    loadFeatured();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Tiga posisi tetap: Web, Foto, Video.
+  const featuredCategories = ["digital", "photo", "video"];
+
+  const [rotation, setRotation] = useState(0);
+
+  useEffect(() => {
+    if (featuredProjects.length === 0) return;
+
+    let timer = null;
+
+    const stop = () => {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const sync = () => {
+      stop();
+
+      if (!document.hidden) {
+        timer = setInterval(() => {
+          setRotation((value) => value + 1);
+        }, 5000);
+      }
+    };
+
+    document.addEventListener("visibilitychange", sync);
+    sync();
+
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [featuredProjects.length]);
+
+  const visibleFeatured = featuredCategories.map((category) => {
+    const projects = featuredProjects.filter(
+      (project) => project.category === category
+    );
+
+    return {
+      category,
+      project: projects.length
+        ? projects[rotation % projects.length]
+        : null,
+    };
+  });
+
   return (
     <div className="bg-neutral-950 text-white min-h-screen font-sans selection:bg-white selection:text-black">
       {/* --- HERO SECTION --- */}
@@ -167,37 +301,77 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <div className="space-y-24">
-            <PortfolioItem
-              img="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop"
-              category="WEB DEVELOPMENT"
-              title="Modern Web Interface"
-              year="2026"
-              align="left"
-              desc="Building fast, responsive web interfaces with strong visual character for personal and business needs."
-              icon={<MonitorSmartphone className="w-5 h-5" />}
-            />
+          {featuredLoading ? (
+            <div className="py-16 text-center text-gray-400">
+              Loading selected works...
+            </div>
+          ) : featuredError ? (
+            <div className="py-16 text-center text-gray-400">
+              Unable to load selected works right now.
+            </div>
+          ) : visibleFeatured.length === 0 ? (
+            <div className="py-16 text-center text-gray-400">
+              New works are coming soon.
+            </div>
+          ) : (
+            <div className="space-y-24">
+              {visibleFeatured.map(({ category, project }, index) => {
+                const display = getProjectDisplay({
+                  category,
+                });
 
-            <PortfolioItem
-              img="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2071&auto=format&fit=crop"
-              category="PHOTO / VIDEO"
-              title="Visual Storytelling"
-              year="2025"
-              align="right"
-              desc="Capturing moments, atmosphere, and stories through photo and video with a cinematic and emotional visual tone."
-              icon={<Camera className="w-5 h-5" />}
-            />
+                if (!project) {
+                  return (
+                    <div
+                      key={category}
+                      className="flex min-h-64 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-center"
+                    >
+                      <div>
+                        <p className="mb-2 text-xs uppercase tracking-widest text-gray-500">
+                          {display.label}
+                        </p>
+                        <p className="text-xl font-semibold text-gray-300">
+                          Coming Soon
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
 
-            <PortfolioItem
-              img="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=2069&auto=format&fit=crop"
-              category="DIGITAL SOLUTION"
-              title="Creative Tech Project"
-              year="2026"
-              align="left"
-              desc="Combining systems, visuals, and digital workflows to help projects look more professional and become easier to manage."
-              icon={<PlayCircle className="w-5 h-5" />}
-            />
-          </div>
+                const originalCover =
+                  project.coverImage ||
+                  project.images?.find(
+                    (image) =>
+                      image.imageUrl &&
+                      image.imageType !== "cover_slider"
+                  )?.imageUrl ||
+                  "";
+
+                const cover =
+                  project.category === "photo"
+                    ? photoImageUrl(originalCover, "preview")
+                    : originalCover;
+
+                return (
+                  <PortfolioItem
+                    key={category}
+                    img={cover}
+                    category={display.label}
+                    title={project.title}
+                    year={project.year || "Portfolio"}
+                    align={index === 1 ? "right" : "left"}
+                    desc={
+                      project.shortDescription ||
+                      project.description ||
+                      "Explore this creative project."
+                    }
+                    icon={display.icon}
+                    to={getProjectLink(project)}
+                  />
+                );
+              })}
+            </div>
+          )}
 
           <div className="text-center mt-20">
             <a
@@ -294,7 +468,7 @@ function SkillCard({ icon, iconBg, title, desc }) {
   );
 }
 
-function PortfolioItem({ img, category, title, year, align, desc, icon }) {
+function PortfolioItem({ img, category, title, year, align, desc, icon, to }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -305,13 +479,24 @@ function PortfolioItem({ img, category, title, year, align, desc, icon }) {
         align === "right" ? "md:flex-row-reverse" : ""
       }`}
     >
-      <div className="w-full md:w-3/5 overflow-hidden rounded-xl border border-white/10 bg-white/5">
-        <img
-          src={img}
-          alt={title}
-          className="w-full h-[400px] md:h-[500px] object-cover hover:scale-110 transition-transform duration-700 ease-in-out cursor-pointer grayscale hover:grayscale-0"
-        />
-      </div>
+      <Link
+        to={to}
+        aria-label={`View ${title}`}
+        className="block w-full md:w-3/5 overflow-hidden rounded-xl border border-white/10 bg-white/5"
+      >
+        {img ? (
+          <img
+            src={img}
+            alt={title}
+            loading="lazy"
+            className="w-full h-[400px] md:h-[500px] object-cover hover:scale-110 transition-transform duration-700 ease-in-out cursor-pointer grayscale hover:grayscale-0"
+          />
+        ) : (
+          <div className="flex h-[400px] md:h-[500px] items-center justify-center bg-neutral-800 text-gray-500">
+            Project Preview
+          </div>
+        )}
+      </Link>
 
       <div className="w-full md:w-2/5 space-y-4">
         <div className="flex items-center gap-4 text-sm tracking-widest text-gray-400 uppercase">
@@ -329,9 +514,12 @@ function PortfolioItem({ img, category, title, year, align, desc, icon }) {
 
         <p className="text-gray-400 leading-relaxed">{desc}</p>
 
-        <button className="text-white border-b border-transparent hover:border-white transition-all pb-1 uppercase text-sm tracking-wider mt-4">
+        <Link
+          to={to}
+          className="inline-block text-white border-b border-transparent hover:border-white transition-all pb-1 uppercase text-sm tracking-wider mt-4"
+        >
           View Project
-        </button>
+        </Link>
       </div>
     </motion.div>
   );

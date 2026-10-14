@@ -130,8 +130,8 @@ export default function CreatePhotoAlbum() {
     const selected = Array.from(event.target.files || []);
 
     try {
-      if (photos.length + selected.length > 20) {
-        throw new Error("Maximum 20 gallery photos per album.");
+      if (photos.length + selected.length > 100) {
+        throw new Error("Maximum 100 gallery photos per album.");
       }
 
       validateFiles(selected);
@@ -486,7 +486,7 @@ export default function CreatePhotoAlbum() {
                   Album Gallery
                 </h2>
                 <p className="mt-1 text-sm text-gray-400">
-                  Maximum 20 photos, 5 MB each.
+                  Maximum 100 photos, 5 MB each.
                 </p>
               </div>
             </div>
