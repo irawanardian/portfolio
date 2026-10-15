@@ -40,8 +40,8 @@ function albumPayload(form, coverImage = "", status = "draft") {
     coverImage,
     externalUrl: "",
     videoEmbed: "",
-    seoTitle: form.seoTitle?.trim() || form.title.trim(),
-    seoDescription: form.seoDescription || form.shortDescription,
+    seoTitle: form.seoTitle?.trim() || "",
+    seoDescription: form.seoDescription?.trim() || "",
     sortOrder: Number(form.sortOrder) || 0,
     tags,
   };

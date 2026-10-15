@@ -53,4 +53,7 @@ back-end/public/uploads/
 **/.env
 **/.env.*
 !**/.env.example
-*.bak-*
+*.bak-*\n\n# Private database backups\nback-end/backups/\n
+# Local backup files (never commit)
+back-end/backups/
+front-end/*.bak-*

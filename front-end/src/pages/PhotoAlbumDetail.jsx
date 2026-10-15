@@ -114,6 +114,110 @@ export default function PhotoAlbumDetail() {
     };
   }, [slug]);
 
+  // SEO: Photo album metadata
+  useEffect(() => {
+    if (!album || album.slug !== slug) return;
+
+    const title =
+      album.seo?.title?.trim() ||
+      `${album.title} | Irawan Ardiantoro`;
+
+    const description =
+      album.seo?.description?.trim() ||
+      album.shortDescription?.trim() ||
+      album.description?.trim() ||
+      `Photography portfolio of ${album.title}.`;
+
+    const canonical =
+      `${window.location.origin}/portfolio/foto/${encodeURIComponent(slug)}`;
+
+    const previousTitle = document.title;
+    const changes = [];
+
+    function setMeta(selector, attribute, value) {
+      let element = document.head.querySelector(selector);
+      const created = !element;
+
+      if (!element) {
+        element = document.createElement("meta");
+
+        if (selector.startsWith('meta[name=')) {
+          const name = selector
+            .replace('meta[name="', "")
+            .replace('"]', "");
+
+          element.setAttribute("name", name);
+        } else if (selector.startsWith('meta[property=')) {
+          const property = selector
+            .replace('meta[property="', "")
+            .replace('"]', "");
+
+          element.setAttribute("property", property);
+        } else {
+          return;
+        }
+
+        document.head.appendChild(element);
+      }
+
+      const oldValue = element.getAttribute(attribute);
+
+      changes.push({
+        element,
+        attribute,
+        oldValue,
+        created,
+      });
+
+      element.setAttribute(attribute, value);
+    }
+
+    document.title = title;
+
+    setMeta('meta[name="description"]', "content", description);
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", canonical);
+    setMeta('meta[name="twitter:title"]', "content", title);
+    setMeta('meta[name="twitter:description"]', "content", description);
+
+    let canonicalElement =
+      document.head.querySelector('link[rel="canonical"]');
+
+    const createdCanonical = !canonicalElement;
+
+    if (!canonicalElement) {
+      canonicalElement = document.createElement("link");
+      canonicalElement.rel = "canonical";
+      document.head.appendChild(canonicalElement);
+    }
+
+    const previousCanonical = canonicalElement.getAttribute("href");
+    canonicalElement.href = canonical;
+
+    return () => {
+      document.title = previousTitle;
+
+      for (const change of changes.reverse()) {
+        if (change.created) {
+          change.element.remove();
+        } else if (change.oldValue === null) {
+          change.element.removeAttribute(change.attribute);
+        } else {
+          change.element.setAttribute(change.attribute, change.oldValue);
+        }
+      }
+
+      if (createdCanonical) {
+        canonicalElement.remove();
+      } else if (previousCanonical === null) {
+        canonicalElement.removeAttribute("href");
+      } else {
+        canonicalElement.setAttribute("href", previousCanonical);
+      }
+    };
+  }, [album, slug]);
+
   const gallery = (Array.isArray(album?.images) ? album.images : [])
     .filter(
       (image) =>

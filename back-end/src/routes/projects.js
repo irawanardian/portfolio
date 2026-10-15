@@ -1,5 +1,6 @@
 import express from "express";
 import pool from "../config/db.js";
+import { generatePhotoMetadata } from "../lib/photoMetadata.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -133,6 +134,27 @@ router.post("/", requireAuth, async (req, res) => {
 
     await client.query("BEGIN");
 
+    const generated =
+      category === "photo"
+        ? generatePhotoMetadata(title, tags)
+        : null;
+
+    const finalShortDescription =
+      shortDescription?.trim() || generated?.shortDescription || null;
+
+    const finalDescription =
+      description?.trim() || generated?.description || null;
+
+    const finalSeoTitle =
+      seoTitle?.trim() || generated?.seoTitle || title;
+
+    const finalSeoDescription =
+      seoDescription?.trim() ||
+      generated?.seoDescription ||
+      finalShortDescription ||
+      finalDescription ||
+      null;
+
     const publishedAt = status === "published" ? new Date() : null;
 
     const projectResult = await client.query(
@@ -165,13 +187,13 @@ router.post("/", requireAuth, async (req, res) => {
         category,
         year || null,
         status,
-        shortDescription || null,
-        description || null,
+        finalShortDescription,
+        finalDescription,
         coverImage || null,
         externalUrl || null,
         videoEmbed || null,
-        seoTitle || title,
-        seoDescription || shortDescription || description || null,
+        finalSeoTitle,
+        finalSeoDescription,
         Number(sortOrder) || 0,
         publishedAt,
       ]
@@ -439,9 +461,51 @@ router.put("/:id", requireAuth, async (req, res) => {
       });
     }
 
-    const publishedAt = status === "published" ? new Date() : null;
-
     await client.query("BEGIN");
+
+    const existingResult = await client.query(
+      `SELECT short_description, description,
+              seo_title, seo_description
+       FROM projects
+       WHERE id = $1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (!existingResult.rows.length) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    const existing = existingResult.rows[0];
+
+    const generated =
+      category === "photo"
+        ? generatePhotoMetadata(title, tags)
+        : null;
+
+    const finalShortDescription =
+      shortDescription?.trim() || existing.short_description || generated?.shortDescription || null;
+
+    const finalDescription =
+      description?.trim() || existing.description || generated?.description || null;
+
+    const finalSeoTitle =
+      seoTitle?.trim() || existing.seo_title || generated?.seoTitle || title;
+
+    const finalSeoDescription =
+      seoDescription?.trim() ||
+      existing.seo_description ||
+      generated?.seoDescription ||
+      finalShortDescription ||
+      finalDescription ||
+      null;
+
+    const publishedAt = status === "published" ? new Date() : null;
 
     const projectResult = await client.query(
       `
@@ -471,13 +535,13 @@ router.put("/:id", requireAuth, async (req, res) => {
         category,
         year || null,
         status,
-        shortDescription || null,
-        description || null,
+        finalShortDescription,
+        finalDescription,
         coverImage || null,
         externalUrl || null,
         videoEmbed || null,
-        seoTitle || title,
-        seoDescription || shortDescription || description || null,
+        finalSeoTitle,
+        finalSeoDescription,
         Number(sortOrder) || 0,
         publishedAt,
         id,
@@ -619,7 +683,7 @@ router.post("/:id/images", requireAuth, async (req, res) => {
 }
 
     const projectCheck = await pool.query(
-      "SELECT id FROM projects WHERE id = $1 LIMIT 1",
+      "SELECT id, title, category FROM projects WHERE id = $1 LIMIT 1",
       [id]
     );
 
@@ -630,18 +694,52 @@ router.post("/:id/images", requireAuth, async (req, res) => {
       });
     }
 
+    const project = projectCheck.rows[0];
+    const providedCaption =
+      typeof caption === "string" ? caption.trim() : "";
+
     const result = await pool.query(
       `
+      WITH allocated AS (
+        SELECT nextval(
+          pg_get_serial_sequence('project_images', 'id')
+        ) AS image_id
+      )
       INSERT INTO project_images (
-  project_id,
-  image_url,
-  caption,
-  sort_order,
-  image_type
-) VALUES ($1, $2, $3, $4, $5)
-RETURNING id, project_id, image_url, caption, sort_order, image_type, created_at
+        id,
+        project_id,
+        image_url,
+        caption,
+        sort_order,
+        image_type
+      )
+      SELECT
+        allocated.image_id,
+        $1,
+        $2,
+        CASE
+          WHEN NULLIF(BTRIM($3::text), '') IS NOT NULL
+            THEN BTRIM($3::text)
+          WHEN $6 = 'photo' AND $5 = 'gallery'
+            THEN $7 || ' — Photo ' ||
+                 LPAD(allocated.image_id::text, 2, '0')
+          ELSE NULL
+        END,
+        $4,
+        $5
+      FROM allocated
+      RETURNING id, project_id, image_url,
+                caption, sort_order, image_type, created_at
       `,
-      [id, imageUrl, caption || null, Number(sortOrder) || 0, imageType]
+      [
+        id,
+        imageUrl,
+        providedCaption,
+        Number(sortOrder) || 0,
+        imageType,
+        project.category,
+        project.title,
+      ]
     );
 
     return res.status(201).json({
