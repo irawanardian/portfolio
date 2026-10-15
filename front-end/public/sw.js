@@ -1,9 +1,7 @@
-const CACHE_NAME = "irawan-portfolio-v3";
+const CACHE_NAME = "irawan-portfolio-v4";
 
-const APP_SHELL = [
-  "/",
+const OFFLINE_ASSETS = [
   "/manifest.webmanifest",
-  "/apple-touch-icon.png",
   "/pwa-192x192.png",
   "/pwa-512x512.png",
   "/pwa-maskable-512x512.png"
@@ -11,8 +9,10 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(
+        OFFLINE_ASSETS.map((url) => cache.add(url))
+      );
     })
   );
 
@@ -21,49 +21,30 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
+    (async () => {
+      const keys = await caches.keys();
+
+      await Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => key.startsWith("irawan-portfolio-") && key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       );
-    })
-  );
 
-  self.clients.claim();
+      await self.clients.claim();
+    })()
+  );
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const request = event.request;
+
+  if (request.method !== "GET") return;
+
+  if (request.mode === "navigate") {
+    // Always use current deployment HTML; do not cache pages.
+    event.respondWith(fetch(request));
     return;
   }
 
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, copy);
-          });
-
-          return response;
-        })
-        .catch(async () => {
-          return (
-            (await caches.match(event.request)) ||
-            (await caches.match("/"))
-          );
-        })
-    );
-
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
-    })
-  );
+  // Let the browser and hosting platform handle hashed assets.
 });

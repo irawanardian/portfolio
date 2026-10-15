@@ -154,6 +154,8 @@ function ProjectSummaryCard({ project }) {
           <img
             src={project.coverImage}
             alt={project.title}
+            loading="eager"
+            decoding="async"
             className="aspect-video w-full object-cover"
           />
         </div>
@@ -337,6 +339,8 @@ function ProjectGallery({ images, projectTitle }) {
               <img
                 src={image.imageUrl}
                 alt={image.caption || projectTitle}
+                loading="lazy"
+                decoding="async"
                 className="aspect-video w-full object-cover"
               />
 

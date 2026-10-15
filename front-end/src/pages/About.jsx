@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React from "react";
 import { motion } from "framer-motion";
 import {
@@ -186,7 +187,7 @@ export default function About() {
 
             <div className="pt-10">
               <a
-                href="/contact"
+                to="/contact"
                 className="inline-flex items-center gap-4 text-white font-bold text-lg hover:text-gray-300 transition-colors group"
               >
                 Start a Conversation

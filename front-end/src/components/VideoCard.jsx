@@ -13,6 +13,8 @@ export default function VideoCard({ video }) {
         <img
           src={video.thumbnail}
           alt={video.title}
+          loading="lazy"
+          decoding="async"
           className="w-full h-[200px] object-cover"
         />
         <h2 className="font-roboto text-white text-sm mt-2 text-start">

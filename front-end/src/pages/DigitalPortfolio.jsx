@@ -154,6 +154,8 @@ function ProjectCard({ project, index }) {
             <img
               src={project.coverImage}
               alt={project.title}
+              loading={index === 0 ? "eager" : "lazy"}
+              decoding="async"
               className="aspect-video w-full object-cover transition duration-700 group-hover:scale-105"
             />
           </div>

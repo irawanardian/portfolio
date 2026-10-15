@@ -169,8 +169,19 @@ export default function Home() {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=2065&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1600&auto=format&fit=crop"
+            srcSet={[
+              "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=640&auto=format&fit=crop 640w",
+              "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=960&auto=format&fit=crop 960w",
+              "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1280&auto=format&fit=crop 1280w",
+              "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1600&auto=format&fit=crop 1600w",
+              "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=2065&auto=format&fit=crop 2065w",
+            ].join(", ")}
+            sizes="100vw"
             alt="Digital Creative Background"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
             className="w-full h-full object-cover opacity-50 scale-105"
           />
 
@@ -212,7 +223,7 @@ export default function Home() {
             className="flex flex-col md:flex-row gap-4 justify-center items-center"
           >
             <a
-              href="/portfolio"
+              to="/portfolio"
               className="group relative px-8 py-4 bg-white text-black font-semibold rounded-full overflow-hidden transition-all hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
@@ -222,7 +233,7 @@ export default function Home() {
             </a>
 
             <a
-              href="/contact"
+              to="/contact"
               className="px-8 py-4 border border-white/20 rounded-full hover:bg-white/10 transition-all text-gray-300 hover:text-white"
             >
               Contact Me
@@ -375,7 +386,7 @@ export default function Home() {
 
           <div className="text-center mt-20">
             <a
-              href="/portfolio"
+              to="/portfolio"
               className="inline-block border-b border-white pb-1 text-xl hover:text-gray-400 transition-colors"
             >
               View All Projects
@@ -385,7 +396,7 @@ export default function Home() {
       </section>
 
       {/* --- ABOUT SHORT --- */}
-      <section className="py-28 px-6 bg-neutral-950">
+      <section className="py-28 px-6 bg-neutral-950 overflow-x-clip">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -489,6 +500,7 @@ function PortfolioItem({ img, category, title, year, align, desc, icon, to }) {
             src={img}
             alt={title}
             loading="lazy"
+            decoding="async"
             className="w-full h-[400px] md:h-[500px] object-cover hover:scale-110 transition-transform duration-700 ease-in-out cursor-pointer grayscale hover:grayscale-0"
           />
         ) : (

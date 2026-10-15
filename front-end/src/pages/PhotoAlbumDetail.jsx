@@ -240,6 +240,8 @@ export default function PhotoAlbumDetail() {
                     fallbackPhotoImage(event, album.coverImage)
                   }
                   alt={`${album.title} cover`}
+                  loading="eager"
+                  decoding="async"
                   className="max-h-[650px] w-full object-cover"
                 />
               </div>
@@ -294,6 +296,7 @@ export default function PhotoAlbumDetail() {
                       }
                       alt={image.caption || `${album.title} ${index + 1}`}
                       loading="lazy"
+                      decoding="async"
                       className="h-auto w-full transition-transform duration-700 group-hover:scale-105"
                     />
 
@@ -384,6 +387,8 @@ export default function PhotoAlbumDetail() {
               <img
                 src={selectedImage.imageUrl}
                 alt={selectedImage.caption || album.title}
+                loading="eager"
+                decoding="async"
                 className="max-h-full max-w-full object-contain"
               />
 

@@ -90,6 +90,7 @@ export default function MobilePhotoMasonry({
                 }
                 alt={image.caption || `${albumTitle} ${index + 1}`}
                 loading="lazy"
+                decoding="async"
                 className="block h-auto w-full"
               />
             </motion.button>
