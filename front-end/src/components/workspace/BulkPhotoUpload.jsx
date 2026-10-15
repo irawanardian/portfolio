@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Images, Loader2, UploadCloud, X } from "lucide-react";
+import {
+  CheckCircle2, Images, Loader2, RefreshCw,
+  Trash2, UploadCloud,
+} from "lucide-react";
 import { apiRequest, API_BASE_URL } from "../../lib/api";
 import { getToken } from "../../lib/auth";
 
@@ -14,276 +17,276 @@ const PUBLIC_API_URL = (
 
 export default function BulkPhotoUpload({
   projectId,
+  ensureProjectId,
   existingCount = 0,
   onImagesAdded,
+  onUploadingChange,
 }) {
-  const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [total, setTotal] = useState(0);
   const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState([]);
-  const inputRef = useRef(null);
-  const filesRef = useRef([]);
+  const [failed, setFailed] = useState([]);
 
-  const updateFiles = (next) => {
-    filesRef.current = next;
-    setFiles(next);
-  };
+  const runningRef = useRef(false);
+  const failedRef = useRef([]);
+  const orderRef = useRef(existingCount);
 
-  const clearFiles = () => {
-    filesRef.current.forEach((item) => {
-      URL.revokeObjectURL(item.preview);
-    });
-    updateFiles([]);
-    if (inputRef.current) inputRef.current.value = "";
+  // Keep track of photos that already existed or were added.
+  useEffect(() => {
+    orderRef.current = Math.max(orderRef.current, existingCount);
+  }, [existingCount]);
+
+  const replaceFailed = (items) => {
+    failedRef.current = items;
+    setFailed(items);
   };
 
   useEffect(() => {
     return () => {
-      filesRef.current.forEach((item) => {
+      failedRef.current.forEach((item) => {
         URL.revokeObjectURL(item.preview);
       });
     };
   }, []);
 
-  const handleSelect = (event) => {
-    const selected = Array.from(event.target.files || []);
-
-    setMessage("");
-    setErrors([]);
-
-    if (selected.length > MAX_FILES) {
-      setMessage(`Maximum ${MAX_FILES} images per batch.`);
-      event.target.value = "";
-      return;
+  const validate = (files) => {
+    if (files.length > MAX_FILES) {
+      throw new Error(`Maximum ${MAX_FILES} files per batch.`);
     }
 
-    const invalid = selected.find(
-      (file) => !ALLOWED.includes(file.type) || file.size > MAX_SIZE
-    );
-
-    if (invalid) {
-      setMessage(
-        `Invalid image: ${invalid.name}. Use JPG, PNG, or WebP, maximum 5 MB.`
-      );
-      event.target.value = "";
-      return;
-    }
-
-    clearFiles();
-
-    updateFiles(
-      selected.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }))
-    );
-  };
-
-  const uploadAll = async () => {
-    if (!files.length || uploading) return;
-
-    const token = getToken();
-
-    if (!token) {
-      setMessage("Session expired. Please log in again.");
-      return;
-    }
-
-    setUploading(true);
-    setProgress(0);
-    setErrors([]);
-    setMessage("");
-
-    const successful = [];
-    const failed = [];
-
-    for (let index = 0; index < files.length; index++) {
-      const item = files[index];
-
-      try {
-        const formData = new FormData();
-        formData.append("image", item.file);
-
-        const response = await fetch(`${API_BASE_URL}/api/uploads/projects`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Upload failed");
-        }
-
-        const imagePath = result.data?.path;
-
-        if (
-          typeof imagePath !== "string" ||
-          !imagePath.startsWith("/uploads/projects/")
-        ) {
-          throw new Error("Invalid image path returned by API");
-        }
-
-        const imageUrl = `${PUBLIC_API_URL}${imagePath}`;
-
-        const saved = await apiRequest(
-          `/api/projects/${projectId}/images`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              imageUrl,
-              caption: "",
-              sortOrder: existingCount + index + 1,
-              imageType: "gallery",
-            }),
-          }
-        );
-
-        successful.push(saved.data);
-        onImagesAdded?.([saved.data]);
-      } catch (error) {
-        failed.push(`${item.file.name}: ${error.message}`);
+    for (const file of files) {
+      if (!ALLOWED.includes(file.type)) {
+        throw new Error(`${file.name}: JPG, PNG, or WebP only.`);
       }
 
-      setProgress(index + 1);
+      if (file.size > MAX_SIZE) {
+        throw new Error(`${file.name}: Maximum size is 5 MB.`);
+      }
     }
+  };
 
-    setErrors(failed);
-    setMessage(
-      `${successful.length} of ${files.length} images added successfully.`
-    );
+  const uploadFiles = async (items) => {
+    if (runningRef.current || items.length === 0) return;
 
-    if (failed.length === 0) {
-      clearFiles();
-    } else {
-      const unsuccessfulNames = new Set(
-        failed.map((line) => line.split(": ")[0])
-      );
+    runningRef.current = true;
+    setUploading(true);
+    onUploadingChange?.(true);
+    setProgress(0);
+    setTotal(items.length);
+    setMessage("");
 
-      updateFiles((() => {
-        const remaining = files.filter((item) =>
-          unsuccessfulNames.has(item.file.name)
-        );
-        files.forEach((item) => {
-          if (!remaining.includes(item)) {
-            URL.revokeObjectURL(item.preview);
+    const errors = [];
+    let succeeded = 0;
+
+    try {
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      const targetId = projectId || await ensureProjectId?.();
+
+      if (!targetId) {
+        throw new Error("Album draft ID is not available.");
+      }
+
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index];
+
+        try {
+          // A successful file upload is reused during retry.
+          if (!item.imageUrl) {
+            const formData = new FormData();
+            formData.append("image", item.file);
+
+            const response = await fetch(
+              `${API_BASE_URL}/api/uploads/projects`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+              }
+            );
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok || !result?.success) {
+              throw new Error(result?.message || "File upload failed.");
+            }
+
+            const path = result.data?.path;
+
+            if (
+              typeof path !== "string" ||
+              !/^\/uploads\/projects\/[^/]+$/.test(path)
+            ) {
+              throw new Error("Invalid uploaded image path.");
+            }
+
+            item.imageUrl = `${PUBLIC_API_URL}${path}`;
           }
-        });
-        return remaining;
-      })());
-    }
 
-    setUploading(false);
+          // Only the database association is retried here.
+          const saved = await apiRequest(
+            `/api/projects/${targetId}/images`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                imageUrl: item.imageUrl,
+                caption: "",
+                sortOrder: orderRef.current + 1,
+                imageType: "gallery",
+              }),
+            }
+          );
+
+          if (!saved?.data?.id) {
+            throw new Error("Image record was not confirmed.");
+          }
+
+          orderRef.current += 1;
+          succeeded += 1;
+          onImagesAdded?.([saved.data]);
+          URL.revokeObjectURL(item.preview);
+        } catch (error) {
+          errors.push({
+            ...item,
+            error: error.message || "Failed to save photo.",
+          });
+        }
+
+        setProgress(index + 1);
+      }
+
+      replaceFailed(errors);
+
+      setMessage(
+        errors.length
+          ? `${succeeded} successful, ${errors.length} failed.`
+          : `${succeeded} photos uploaded and saved successfully.`
+      );
+    } catch (error) {
+      // Draft creation or authentication errors must not lock the UI.
+      replaceFailed(items.map((item) => ({
+        ...item,
+        error: error.message || "Unable to prepare upload.",
+      })));
+      setMessage(error.message || "Unable to prepare upload.");
+    } finally {
+      runningRef.current = false;
+      setUploading(false);
+      onUploadingChange?.(false);
+    }
+  };
+
+  const handleSelect = async (event) => {
+    const selected = Array.from(event.target.files || []);
+    event.target.value = "";
+
+    if (
+      selected.length === 0 ||
+      runningRef.current ||
+      failedRef.current.length > 0
+    ) return;
+
+    try {
+      validate(selected);
+
+      const items = selected.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+        imageUrl: null,
+      }));
+
+      await uploadFiles(items);
+    } catch (error) {
+      setMessage(error.message || "Invalid files.");
+    }
+  };
+
+  const retryFailed = async () => {
+    if (runningRef.current || failedRef.current.length === 0) return;
+
+    const retry = [...failedRef.current];
+    replaceFailed([]);
+    await uploadFiles(retry);
+  };
+
+  const discardFailed = () => {
+    if (runningRef.current) return;
+
+    failedRef.current.forEach((item) => {
+      URL.revokeObjectURL(item.preview);
+    });
+    replaceFailed([]);
+    setMessage("Failed items cleared from the queue.");
   };
 
   return (
-    <div className="mb-8 rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-7">
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
       <div className="mb-5 flex items-center gap-3">
         <Images className="h-7 w-7 text-white" />
         <div>
           <h3 className="text-xl font-bold text-white">
-            Bulk Photo Upload
+            Gallery Photos
           </h3>
           <p className="text-sm text-gray-400">
-            Upload up to 100 photos at once. Maximum 5 MB each.
+            Auto-upload up to 100 photos per batch.
+            Maximum 5 MB each.
           </p>
         </div>
       </div>
 
-      <label className={`flex min-h-36 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 bg-black/20 p-6 text-center transition hover:border-white/50 ${uploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
-        <UploadCloud className="h-9 w-9 text-gray-400" />
-        <span className="font-semibold">
-          Select Photos
+      <label
+        className={`flex min-h-36 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/20 bg-black/20 p-6 text-center transition ${
+          uploading || failed.length
+            ? "cursor-not-allowed opacity-50"
+            : "cursor-pointer hover:border-white/50"
+        }`}
+      >
+        {uploading ? (
+          <Loader2 className="h-9 w-9 animate-spin" />
+        ) : (
+          <UploadCloud className="h-9 w-9 text-gray-400" />
+        )}
+
+        <span className="font-semibold text-white">
+          {uploading ? "Uploading Photos..." : "Select Photos"}
         </span>
+
         <span className="text-xs text-gray-500">
-          JPG, PNG, WebP — Max 100 files
+          JPG, PNG, WebP — Select 1 to 100 files
         </span>
 
         <input
-          ref={inputRef}
           type="file"
           multiple
           accept="image/jpeg,image/png,image/webp"
-          disabled={uploading}
+          disabled={uploading || failed.length > 0}
           onChange={handleSelect}
           className="hidden"
         />
       </label>
 
-      {files.length > 0 && (
-        <>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-            {files.map((item, index) => (
-              <div
-                key={`${item.file.name}-${index}`}
-                className="relative overflow-hidden rounded-xl border border-white/10 bg-neutral-900"
-              >
-                <img
-                  src={item.preview}
-                  alt={item.file.name}
-                  className="aspect-square w-full object-cover"
-                />
-
-                {!uploading && (
-                  <button
-                    type="button"
-                    aria-label={`Remove ${item.file.name}`}
-                    onClick={() => {
-                      URL.revokeObjectURL(item.preview);
-                      updateFiles(
-                        files.filter((_, i) => i !== index)
-                      );
-                    }}
-                    className="absolute right-2 top-2 rounded-full bg-black/70 p-1.5"
-                  >
-                    <X size={15} />
-                  </button>
-                )}
-
-                <p className="truncate px-2 py-2 text-xs text-gray-400">
-                  {item.file.name}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={uploadAll}
-              disabled={uploading}
-              className="inline-flex items-center gap-3 rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:bg-gray-200 disabled:opacity-50"
-            >
-              {uploading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <UploadCloud className="h-5 w-5" />
-              )}
-
-              {uploading ? "Uploading..." : `Upload ${files.length} Photos`}
-            </button>
-          </div>
-        </>
-      )}
-
       {uploading && (
-        <div className="mt-5">
-          <div className="mb-2 flex justify-between text-sm text-gray-400">
-            <span>Uploading photos</span>
-            <span>{progress} / {files.length}</span>
+        <div className="mt-6" role="status">
+          <div className="mb-3 flex justify-between text-sm text-gray-300">
+            <span>Uploading and saving photos...</span>
+            <span>{progress} / {total}</span>
           </div>
+
           <div className="h-2 overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full bg-white transition-all"
+              className="h-full rounded-full bg-white transition-all duration-300"
               style={{
-                width: `${(progress / files.length) * 100}%`,
+                width: `${total ? (progress / total) * 100 : 0}%`,
               }}
             />
           </div>
@@ -291,26 +294,49 @@ export default function BulkPhotoUpload({
       )}
 
       {message && (
-        <p
-          role="status"
-          className="mt-5 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-gray-300"
-        >
-          {message}
-        </p>
-      )}
-
-      {errors.length > 0 && (
-        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4">
-          <p className="mb-2 text-sm font-semibold text-red-300">
-            Failed uploads
-          </p>
-          {errors.map((error, index) => (
-            <p key={index} className="text-xs text-red-200">
-              {error}
-            </p>
-          ))}
+        <div role="status" className="mt-5 flex gap-2 text-sm text-gray-300">
+          {!uploading && failed.length === 0 && (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-green-400" />
+          )}
+          <span>{message}</span>
         </div>
       )}
-    </div>
+
+      {failed.length > 0 && !uploading && (
+        <div className="mt-5 rounded-xl border border-red-500/20 p-4">
+          <p className="mb-3 text-sm font-semibold text-red-300">
+            {failed.length} photos need attention
+          </p>
+
+          <div className="max-h-40 space-y-2 overflow-y-auto">
+            {failed.map((item, index) => (
+              <p key={index} className="text-xs text-red-200">
+                {item.file.name}: {item.error}
+              </p>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={retryFailed}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2 text-sm text-white hover:bg-white/10"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Retry Failed
+            </button>
+
+            <button
+              type="button"
+              onClick={discardFailed}
+              className="inline-flex items-center gap-2 rounded-full border border-red-500/30 px-5 py-2 text-sm text-red-300 hover:bg-red-500/10"
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear Queue
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

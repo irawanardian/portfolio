@@ -64,7 +64,7 @@ export default function Foto() {
 
   useEffect(() => {
     const update = () => {
-      setPerPage(window.innerWidth < 768 ? 4 : 9);
+      setPerPage(window.innerWidth < 768 ? 12 : 9);
     };
 
     update();

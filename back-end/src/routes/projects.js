@@ -327,6 +327,79 @@ router.get("/workspace/:id", requireAuth, async (req, res) => {
   }
 });
 
+
+// Update photo cover only, without overwriting album metadata.
+router.patch("/:id/cover", requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { coverImage } = req.body || {};
+
+    if (!/^[0-9]+$/.test(String(id))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid album ID",
+      });
+    }
+
+    if (
+      typeof coverImage !== "string" ||
+      coverImage.length > 2048
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid cover URL",
+      });
+    }
+
+    let parsedUrl;
+
+    try {
+      parsedUrl = new URL(coverImage);
+    } catch {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid cover URL",
+      });
+    }
+
+    if (parsedUrl.protocol !== "https:") {
+      return res.status(400).json({
+        success: false,
+        message: "Cover must use HTTPS",
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE projects
+       SET cover_image = $1, updated_at = NOW()
+       WHERE id = $2 AND category = 'photo'
+       RETURNING id, cover_image`,
+      [parsedUrl.href, id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Photo album not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id,
+        coverImage: result.rows[0].cover_image,
+      },
+    });
+  } catch (error) {
+    console.error("PATCH photo cover error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to save album cover",
+    });
+  }
+});
+
 router.put("/:id", requireAuth, async (req, res) => {
   const client = await pool.connect();
 
