@@ -6,6 +6,7 @@ const Portfolio = lazy(() => import("./pages/Portfolio"));
 const DigitalPortfolio = lazy(() => import("./pages/DigitalPortfolio"));
 const DigitalProjectDetail = lazy(() => import("./pages/DigitalProjectDetail"));
 const ProjectCategories = lazy(() => import("./pages/workspace/projects/Categories"));
+const PhotoCategories = lazy(() => import("./pages/workspace/projects/PhotoCategories"));
 const Foto = lazy(() => import("./pages/Foto"));
 const PhotoAlbumDetail = lazy(() => import("./pages/PhotoAlbumDetail"));
 const Video = lazy(() => import("./pages/Video"));
@@ -188,6 +189,17 @@ export default function App() {
           }
         />
       ))}
+
+      <Route
+        path="/projects/foto/categories"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <PhotoCategories />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/projects/create"

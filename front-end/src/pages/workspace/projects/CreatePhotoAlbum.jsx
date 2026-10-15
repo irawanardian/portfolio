@@ -11,10 +11,6 @@ import { getToken } from "../../../lib/auth";
 import BulkPhotoUpload from "../../../components/workspace/BulkPhotoUpload";
 
 const PUBLIC_API = "https://portfolio-api.ambulancegema.com";
-const CATEGORIES = [
-  "Wedding", "Prewedding", "Engagement", "Portrait",
-  "Event", "Product", "Landscape", "Street", "Corporate"
-];
 const TYPES = ["image/jpeg", "image/png", "image/webp"];
 const fieldStyle =
   "w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-white/40";

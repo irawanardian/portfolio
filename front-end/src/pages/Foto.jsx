@@ -1,3 +1,4 @@
+import { usePhotoCategories } from "../lib/usePhotoCategories";
 import { photoImageUrl, photoSrcSet, fallbackPhotoImage } from "../lib/photoImages";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,20 +11,12 @@ import {
 } from "lucide-react";
 import { apiRequest } from "../lib/api";
 
-const categories = [
-  "All",
-  "Wedding",
-  "Prewedding",
-  "Engagement",
-  "Portrait",
-  "Event",
-  "Product",
-  "Landscape",
-  "Street",
-  "Corporate",
-];
+
 
 export default function Foto() {
+  const photoCategories = usePhotoCategories();
+  const categories = ["All", ...photoCategories];
+
   const navigate = useNavigate();
   const [photos, setPhotos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");

@@ -5,6 +5,7 @@ import {
   Monitor,
   Camera,
   Clapperboard,
+  Tags,
 } from "lucide-react";
 
 const categories = [
@@ -31,6 +32,14 @@ const categories = [
     path: "/projects/video",
     icon: Clapperboard,
     number: "03",
+  },
+  {
+    title: "Kategori Foto",
+    description:
+      "Add, edit, and organize your photo album categories.",
+    path: "/projects/foto/categories",
+    icon: Tags,
+    number: "04",
   },
 ];
 

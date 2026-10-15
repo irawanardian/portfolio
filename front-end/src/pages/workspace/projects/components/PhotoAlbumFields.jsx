@@ -1,7 +1,4 @@
-const CATEGORIES = [
-  "Wedding", "Prewedding", "Engagement", "Portrait",
-  "Event", "Product", "Landscape", "Street", "Corporate"
-];
+import { usePhotoCategories } from "../../../../lib/usePhotoCategories";
 
 const inputClass =
   "w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-white/40";
@@ -23,6 +20,14 @@ export default function PhotoAlbumFields({
   onChange,
   onCategoryChange,
 }) {
+  const categories = usePhotoCategories();
+  const categoryOptions =
+    photoCategory && !categories.some(
+      (category) => category.toLowerCase() === photoCategory.toLowerCase()
+    )
+      ? [photoCategory, ...categories]
+      : categories;
+
   return (
     <div className="grid gap-5 md:grid-cols-2">
       <Field label="Album Title">
@@ -53,7 +58,7 @@ export default function PhotoAlbumFields({
           className={inputClass}
         >
           <option value="">Select category</option>
-          {CATEGORIES.map((category) => (
+          {categoryOptions.map((category) => (
             <option
               key={category}
               value={category}

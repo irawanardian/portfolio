@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import projectRoutes from "./src/routes/projects.js";
+import photoCategoriesRoutes from "./src/routes/photoCategories.js";
 import authRoutes from "./src/routes/auth.js";
 import uploadRoutes from "./src/routes/uploads.js";
 
@@ -43,6 +44,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/photo-categories", photoCategoriesRoutes);
 app.use("/api/uploads", uploadRoutes);
 
 app.use((req, res) => {

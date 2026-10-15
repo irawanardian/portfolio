@@ -1,3 +1,4 @@
+import { usePhotoCategories } from "../../../../lib/usePhotoCategories";
 import PhotoAlbumFields from "../components/PhotoAlbumFields";
 import PhotoAlbumCover from "../components/PhotoAlbumCover";
 import PhotoCaptionEditor from "../../../../components/workspace/PhotoCaptionEditor";
@@ -23,7 +24,7 @@ import {
   closeSwal,
 } from "../../../../lib/swal";
 
-const PHOTO_CATEGORIES = ["Wedding", "Prewedding", "Engagement", "Portrait", "Event", "Product", "Landscape", "Street", "Corporate"];
+
 
 const initialForm = {
   title: "",
@@ -47,6 +48,8 @@ function wait(ms) {
 }
 
 export default function EditProject() {
+  const PHOTO_CATEGORIES = usePhotoCategories();
+
   const { id } = useParams();
   const navigate = useNavigate();
 
