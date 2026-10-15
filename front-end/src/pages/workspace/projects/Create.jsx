@@ -1,3 +1,4 @@
+import WebProjectEditor from "./WebProjectEditor";
 import VideoProjectEditor from "./VideoProjectEditor";
 import CreatePhotoAlbum from "./CreatePhotoAlbum";
 import { useState } from "react";
@@ -156,6 +157,10 @@ export default function CreateProject() {
 
   if (initialCategory === "video") {
     return <VideoProjectEditor mode="create" />;
+  }
+
+  if (initialCategory === "digital") {
+    return <WebProjectEditor mode="create" />;
   }
 
   return (
