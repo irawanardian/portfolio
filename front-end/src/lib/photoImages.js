@@ -1,24 +1,46 @@
 const STORAGE_HOST = "portfolio-api.ambulancegema.com";
 
-export function photoImageUrl(original, variant = "original") {
-  if (!original || variant === "original") return original;
+function normalizePhotoUrl(original) {
+  if (!original || typeof original !== "string") return original;
 
   try {
     const url = new URL(original, window.location.origin);
+
+    // Only upgrade our own image storage host.
+    if (url.hostname === STORAGE_HOST && url.protocol === "http:") {
+      url.protocol = "https:";
+      return url.toString();
+    }
+
+    return original;
+  } catch {
+    return original;
+  }
+}
+
+export function photoImageUrl(original, variant = "original") {
+  const safeOriginal = normalizePhotoUrl(original);
+
+  if (!safeOriginal || variant === "original") {
+    return safeOriginal;
+  }
+
+  try {
+    const url = new URL(safeOriginal, window.location.origin);
 
     if (
       url.hostname !== STORAGE_HOST ||
       !url.pathname.startsWith("/uploads/projects/")
     ) {
-      return original;
+      return safeOriginal;
     }
 
     if (/\.(thumb|preview)\.webp$/i.test(url.pathname)) {
-      return original;
+      return safeOriginal;
     }
 
     if (!/\.(jpg|jpeg|png|webp)$/i.test(url.pathname)) {
-      return original;
+      return safeOriginal;
     }
 
     url.pathname = url.pathname.replace(
@@ -28,31 +50,32 @@ export function photoImageUrl(original, variant = "original") {
 
     return url.toString();
   } catch {
-    return original;
+    return safeOriginal;
   }
 }
 
 export function fallbackPhotoImage(event, original) {
   const img = event.currentTarget;
+  const safeOriginal = normalizePhotoUrl(original);
 
-  if (!original || img.src === original) return;
+  if (!safeOriginal || img.src === safeOriginal) return;
 
   img.onerror = null;
   img.removeAttribute("srcset");
   img.removeAttribute("sizes");
-  img.src = original;
+  img.src = safeOriginal;
 }
-
 
 export function photoSrcSet(original) {
   if (!original) return undefined;
 
+  const safeOriginal = normalizePhotoUrl(original);
   const thumb = photoImageUrl(original, "thumbnail");
   const preview = photoImageUrl(original, "preview");
 
   if (
-    thumb === original ||
-    preview === original
+    thumb === safeOriginal ||
+    preview === safeOriginal
   ) {
     return undefined;
   }
