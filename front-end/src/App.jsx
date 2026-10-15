@@ -1,30 +1,51 @@
+import { lazy, Suspense } from "react";
+const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
+const DashboardLayout = lazy(() => import("./layouts/DashboardLayout"));
+const Home = lazy(() => import("./pages/Home"));
+const Portfolio = lazy(() => import("./pages/Portfolio"));
+const DigitalPortfolio = lazy(() => import("./pages/DigitalPortfolio"));
+const DigitalProjectDetail = lazy(() => import("./pages/DigitalProjectDetail"));
+const ProjectCategories = lazy(() => import("./pages/workspace/projects/Categories"));
+const Foto = lazy(() => import("./pages/Foto"));
+const PhotoAlbumDetail = lazy(() => import("./pages/PhotoAlbumDetail"));
+const Video = lazy(() => import("./pages/Video"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Dashboard = lazy(() => import("./pages/workspace/Dashboard"));
+const Projects = lazy(() => import("./pages/workspace/projects/Index"));
+const CreateProject = lazy(() => import("./pages/workspace/projects/Create"));
+const EditProject = lazy(() => import("./pages/workspace/projects/Edit"));
+const Media = lazy(() => import("./pages/workspace/Media"));
+const Analytics = lazy(() => import("./pages/workspace/Analytics"));
+
 import ScrollToTop from "./components/ScrollToTop";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { getToken } from "./lib/auth";
 
-import PublicLayout from "./layouts/PublicLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
 
-import Home from "./pages/Home";
-import Portfolio from "./pages/Portfolio";
-import DigitalPortfolio from "./pages/DigitalPortfolio";
-import DigitalProjectDetail from "./pages/DigitalProjectDetail";
-import ProjectCategories from "./pages/workspace/projects/Categories";
-import Foto from "./pages/Foto";
-import PhotoAlbumDetail from "./pages/PhotoAlbumDetail";
-import Video from "./pages/Video";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
 
-import Login from "./pages/auth/Login";
-import Dashboard from "./pages/workspace/Dashboard";
 
-import Projects from "./pages/workspace/projects/Index";
-import CreateProject from "./pages/workspace/projects/Create";
-import EditProject from "./pages/workspace/projects/Edit";
 
-import Media from "./pages/workspace/Media";
-import Analytics from "./pages/workspace/Analytics";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function ProtectedRoute({ children }) {
   const token = getToken();
@@ -40,6 +61,13 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-neutral-950 text-sm text-gray-400">
+            Loading page...
+          </div>
+        }
+      >
       <Routes>
       <Route
         path="/"
@@ -205,6 +233,7 @@ export default function App() {
         }
       />
       </Routes>
+      </Suspense>
     </>
   );
 }
