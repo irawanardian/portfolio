@@ -1,3 +1,4 @@
+import VideoProjectEditor from "./VideoProjectEditor";
 import CreatePhotoAlbum from "./CreatePhotoAlbum";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -151,6 +152,10 @@ export default function CreateProject() {
 
   if (initialCategory === "photo") {
     return <CreatePhotoAlbum />;
+  }
+
+  if (initialCategory === "video") {
+    return <VideoProjectEditor mode="create" />;
   }
 
   return (
